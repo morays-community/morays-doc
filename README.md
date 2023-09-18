@@ -5,8 +5,8 @@
 This repository contains sources for the development of interfaces between NEMO and python-written Machine Learning features via OASIS. 
 
 The long term objectives are:
-  * create an API into NEMO to easily implement models that needs data/inferences exchange with ML components
-  * build a python code that manages the data treatment in accordance with inferences asked by NEMO models or users
+  - create an API into NEMO to easily implement models that needs data/inferences exchange with ML components
+  - build a python code that manages the data treatment in accordance with inferences asked by NEMO models or users
 
 **MAIN ROADMAP**
   * I: ~~perform dummy exchanges between NEMO and python code with OASIS~~
