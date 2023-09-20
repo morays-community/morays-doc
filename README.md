@@ -23,8 +23,6 @@ Sanding box for NEMO sources. Copy them in the `MY_SRC` directory of a NEMO_v4.2
       - Coupling module is independent and can be called by any other module to define coupling variables, send and receive them on demand
       - Now possible to perform exchange of 3D fields (OASIS_v5 needed)
 
-      [ ADD A DRAWING ]
-
   * Properties of coupling variables are stored in meta-arrays `ssnd` and `srcv` in coupling module
       - Dimension added to the array to sort meta-data between calling modules
 
@@ -32,6 +30,21 @@ Sanding box for NEMO sources. Copy them in the `MY_SRC` directory of a NEMO_v4.2
       - `infmod.F90` : module dedicated to Inference Models management 
          /!\ HARD-CODED DUMMY MODELS FOR NOW /!\
       - `inffld.F90` : memory management for inference models needed fields
+
+<table>
+<tr>
+<th> Before </th>
+<th> After </th>
+</tr>
+<tr>
+<td>
+<img width="512" alt="archi_nemo_old" src="https://github.com/alexis-barge/smart-morey/assets/138531178/bf8aed26-693a-4b34-8ce8-bc2f2da1b2c9">
+</td>
+<td>
+<img width="466" alt="archi_nemo_new" src="https://github.com/alexis-barge/smart-morey/assets/138531178/8e2ac17a-2168-4aa0-9bc9-e666cd66dc5c">
+</td>
+</tr>
+</table>
 
 ## Python Coupling: *python_cpl*
 
