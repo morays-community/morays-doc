@@ -34,7 +34,7 @@ OASIS needs to be compiled first because both XIOS and NEMO depend on it.
     ``` make -f TopMakefileOasis3 pyoasis ```
 
 
-* If everything goes right, you should find the following libraries in `oasis3-mct/lib/`:
+* If everything goes right, you should find the following libraries in `oasis3-mct/<YOUR_BLD_DIR>/lib/`:
 
       libmct.so         libmpeu.so         liboasis.cbind.so         libpsmile.MPI1.so         libscrip.so
 
