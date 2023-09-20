@@ -74,8 +74,6 @@ MODULE cpl_oasis3
    LOGICAL, PUBLIC            ::   lk_oasis = .TRUE.  !: OASIS used
 #endif
 
-   INTEGER                    ::   nrcv         ! total number of fields received
-   INTEGER                    ::   nsnd         ! total number of fields sent
    INTEGER                    ::   ncplmodel    ! Maximum number of models to/from which NEMO is potentialy sending/receiving data
    INTEGER, PUBLIC, PARAMETER ::   nmaxfld=62   ! Maximum number of coupling fields
    INTEGER, PUBLIC, PARAMETER ::   nmaxcat=5    ! Maximum number of field categories
@@ -90,7 +88,7 @@ MODULE cpl_oasis3
       CHARACTER(len = 8)    ::   clname    ! Name of the coupling field
       CHARACTER(len = 1)    ::   clgrid    ! Grid type
       REAL(wp)              ::   nsgn      ! Control of the sign change
-      INTEGER, DIMENSION(ntypmax,nmaxcat,nmaxcpl) ::   nid   ! Id of the field (no more than 9 categories and 9 extrena models)
+      INTEGER, DIMENSION(nmaxcat,nmaxcpl) ::   nid   ! Id of the field (no more than 9 categories and 9 extrena models)
       INTEGER               ::   nct       ! Number of categories in field
       INTEGER               ::   ncplmodel ! Maximum number of models to/from which this variable may be sent/received
       INTEGER               ::   nlvl      ! bundle size for OASIS
@@ -207,7 +205,7 @@ CONTAINS
       INTEGER, INTENT(in) ::   ktyp           ! Coupling type which belong the coupling fields
       !
       INTEGER :: ji,jc,jm       ! local loop indicees
-      INTEGER :: isnd = 0, ircv = 0
+      INTEGER :: isnd, ircv
       CHARACTER(LEN=64) :: zclname
       CHARACTER(LEN=2) :: cli2
       !!--------------------------------------------------------------------
@@ -221,17 +219,17 @@ CONTAINS
 
       ncplmodel = kcplmodel
       IF( kcplmodel > nmaxcpl ) THEN
-         CALL oasis_abort ( ncomp_id, 'cpl_var', 'ncplmodel is larger than nmaxcpl, increase nmaxcpl')   ;   RETURN
+         CALL oasis_abort ( ncomp_id, 'cpl_var', 'kcplmodel is larger than nmaxcpl, increase nmaxcpl')   ;   RETURN
       ENDIF
 
-      nrcv = krcv
-      IF( nrcv > nmaxfld ) THEN
-         CALL oasis_abort ( ncomp_id, 'cpl_var', 'nrcv is larger than nmaxfld, increase nmaxfld')   ;   RETURN
+      ircv = 0
+      IF( krcv > nmaxfld ) THEN
+         CALL oasis_abort ( ncomp_id, 'cpl_var', 'krcv is larger than nmaxfld, increase nmaxfld')   ;   RETURN
       ENDIF
 
-      nsnd = ksnd
-      IF( nsnd > nmaxfld ) THEN
-         CALL oasis_abort ( ncomp_id, 'cpl_var', 'nsnd is larger than nmaxfld, increase nmaxfld')   ;   RETURN
+      isnd = 0
+      IF( ksnd > nmaxfld ) THEN
+         CALL oasis_abort ( ncomp_id, 'cpl_var', 'ksnd is larger than nmaxfld, increase nmaxfld')   ;   RETURN
       ENDIF
 
       IF( ktyp > ntypmax ) THEN
@@ -277,15 +275,19 @@ CONTAINS
                   ENDIF
 #endif
                   IF( sn_cfctl%l_oasout ) WRITE(numout,*) "Define", ji, jc, jm, " "//TRIM(zclname), " for ", OASIS_Out
-                  CALL oasis_def_var (ssnd(ktyp,ji)%nid(ktyp,jc,jm), zclname, nid_part   , (/ 2, ssnd(ktyp,ji)%nlvl /),   &
+                  CALL oasis_def_var (ssnd(ktyp,ji)%nid(jc,jm), zclname, nid_part   , (/ 2, ssnd(ktyp,ji)%nlvl /),   &
                      &                OASIS_Out          , nishape , OASIS_REAL, nerror )
                   IF( nerror /= OASIS_Ok ) THEN
                      WRITE(numout,*) 'Failed to define transient ', ji, jc, jm, " "//TRIM(zclname)
-                     CALL oasis_abort ( ssnd(ktyp,ji)%nid(ktyp,jc,jm), 'cpl_var', 'Failure in oasis_def_var' )
+                     CALL oasis_abort ( ssnd(ktyp,ji)%nid(jc,jm), 'cpl_var', 'Failure in oasis_def_var' )
                   ENDIF
-                  IF( sn_cfctl%l_oasout .AND. ssnd(ktyp,ji)%nid(ktyp,jc,jm) /= -1 ) WRITE(numout,*) "variable defined in the namcouple"
-                  IF( sn_cfctl%l_oasout .AND. ssnd(ktyp,ji)%nid(ktyp,jc,jm) == -1 ) WRITE(numout,*) "variable NOT defined in the namcouple"
-                  IF( ssnd(ktyp,ji)%nid(ktyp,jc,jm) > 0 ) isnd = isnd + 1
+                  IF( ssnd(ktyp,ji)%nid(jc,jm) /= -1 ) THEN
+                     IF( sn_cfctl%l_oasout ) WRITE(numout,*) "Variable defined in the namcouple"
+                     isnd = isnd + 1
+                  ELSEIF( ssnd(ktyp,ji)%nid(jc,jm) == -1 ) THEN 
+                     WRITE(numout,*) "   "//TRIM(ssnd(ktyp,ji)%clname)//" NOT defined in the namcouple, coupling disabled"
+                     ssnd(ktyp,ji)%laction = .FALSE.
+                  ENDIF
                END DO
             END DO
          ENDIF
@@ -329,15 +331,19 @@ CONTAINS
                   ENDIF
 #endif
                   IF( sn_cfctl%l_oasout ) WRITE(numout,*) "Define", ji, jc, jm, " "//TRIM(zclname), " for ", OASIS_In
-                  CALL oasis_def_var (srcv(ktyp,ji)%nid(ktyp,jc,jm), zclname, nid_part   , (/ 2, srcv(ktyp,ji)%nlvl /),   &
+                  CALL oasis_def_var (srcv(ktyp,ji)%nid(jc,jm), zclname, nid_part   , (/ 2, srcv(ktyp,ji)%nlvl /),   &
                      &                OASIS_In           , nishape , OASIS_REAL, nerror )
                   IF( nerror /= OASIS_Ok ) THEN
                      WRITE(numout,*) 'Failed to define transient ', ji, jc, jm, " "//TRIM(zclname)
-                     CALL oasis_abort ( srcv(ktyp,ji)%nid(ktyp,jc,jm), 'cpl_var', 'Failure in oasis_def_var' )
+                     CALL oasis_abort ( srcv(ktyp,ji)%nid(jc,jm), 'cpl_var', 'Failure in oasis_def_var' )
                   ENDIF
-                  IF( sn_cfctl%l_oasout .AND. srcv(ktyp,ji)%nid(ktyp,jc,jm) /= -1 ) WRITE(numout,*) "variable defined in the namcouple"
-                  IF( sn_cfctl%l_oasout .AND. srcv(ktyp,ji)%nid(ktyp,jc,jm) == -1 ) WRITE(numout,*) "variable NOT defined in the namcouple"
-                  IF( srcv(ktyp,ji)%nid(ktyp,jc,jm) > 0 ) ircv = ircv + 1
+                  IF( srcv(ktyp,ji)%nid(jc,jm) /= -1 ) THEN
+                     IF( sn_cfctl%l_oasout ) WRITE(numout,*) "Variable defined in the namcouple"
+                     ircv = ircv + 1
+                  ELSEIF( srcv(ktyp,ji)%nid(jc,jm) == -1 ) THEN 
+                     WRITE(numout,*) "   "//TRIM(srcv(ktyp,ji)%clname)//" NOT defined in the namcouple, coupling disabled"
+                     srcv(ktyp,ji)%laction = .FALSE.
+                  ENDIF
                END DO
             END DO
          ENDIF
@@ -410,12 +416,12 @@ CONTAINS
       DO jc = 1, ssnd(ktyp,kid)%nct
          DO jm = 1, ssnd(ktyp,kid)%ncplmodel
 
-            IF( ssnd(ktyp,kid)%nid(ktyp,jc,jm) /= -1 ) THEN   ! exclude halos from data sent to oasis
+            IF( ssnd(ktyp,kid)%nid(jc,jm) /= -1 ) THEN   ! exclude halos from data sent to oasis
 
                IF( .NOT. ll3D ) THEN   ! send 2D or 3D fields
-                  CALL oasis_put ( ssnd(ktyp,kid)%nid(ktyp,jc,jm), kstep, pdata(Nis0:Nie0, Njs0:Nje0,jc), kinfo )
+                  CALL oasis_put ( ssnd(ktyp,kid)%nid(jc,jm), kstep, pdata(Nis0:Nie0, Njs0:Nje0,jc), kinfo )
                ELSE 
-                  CALL oasis_put ( ssnd(ktyp,kid)%nid(ktyp,jc,jm), kstep, pdata(Nis0:Nie0, Njs0:Nje0,1:ssnd(ktyp,kid)%nlvl), kinfo )
+                  CALL oasis_put ( ssnd(ktyp,kid)%nid(jc,jm), kstep, pdata(Nis0:Nie0, Njs0:Nje0,1:ssnd(ktyp,kid)%nlvl), kinfo )
                ENDIF
 
                IF ( sn_cfctl%l_oasout ) THEN
@@ -423,7 +429,7 @@ CONTAINS
                      & kinfo == OASIS_SentOut  .OR. kinfo == OASIS_ToRestOut ) THEN
                      WRITE(numout,*) '****************'
                      WRITE(numout,*) 'oasis_put: Outgoing ', ssnd(ktyp,kid)%clname
-                     WRITE(numout,*) 'oasis_put: ivarid ', ssnd(ktyp,kid)%nid(ktyp,jc,jm)
+                     WRITE(numout,*) 'oasis_put: ivarid ', ssnd(ktyp,kid)%nid(jc,jm)
                      WRITE(numout,*) 'oasis_put:  kstep ', kstep
                      WRITE(numout,*) 'oasis_put:   info ', kinfo
                      WRITE(numout,*) '     - Minimum value is ', MINVAL(pdata(Nis0:Nie0,Njs0:Nje0,jc))
@@ -455,8 +461,8 @@ CONTAINS
       REAL(wp), DIMENSION(:,:,:), INTENT(inout)           ::   pdata     ! IN to keep the value if nothing is done
       REAL(wp), DIMENSION(:,:,:), INTENT(in   ), OPTIONAL ::   pmask     ! coupling mask
       !!
-      INTEGER                                             ::   jc,jm              ! local loop index
-      INTEGER                                             ::   ib = 1, iu(2) = 1  ! bottom/up array indexes
+      INTEGER                                             ::   jc,jm      ! local loop index
+      INTEGER                                             ::   ib, iu(2)  ! bottom/up array indexes
       LOGICAL                                             ::   llaction, ll_1st, ll_mask, ll3D
       !!--------------------------------------------------------------------
       !
@@ -476,22 +482,24 @@ CONTAINS
 
          DO jm = 1, srcv(ktyp,kid)%ncplmodel
 
-            IF( srcv(ktyp,kid)%nid(ktyp,jc,jm) /= -1 ) THEN
+            IF( srcv(ktyp,kid)%nid(jc,jm) /= -1 ) THEN
 
                IF( .NOT. ll3D ) THEN   ! Receive 2D or 3D field
-                  CALL oasis_get ( srcv(ktyp,kid)%nid(ktyp,jc,jm), kstep, exfld(:,:,1), kinfo )
+                  CALL oasis_get ( srcv(ktyp,kid)%nid(jc,jm), kstep, exfld(:,:,1), kinfo )
                   ib = jc
+                  iu(1) = 1
                   iu(2) = jc
                ELSE
-                  CALL oasis_get ( srcv(ktyp,kid)%nid(ktyp,jc,jm), kstep, exfld(:,:,1:srcv(ktyp,kid)%nlvl), kinfo )
+                  CALL oasis_get ( srcv(ktyp,kid)%nid(jc,jm), kstep, exfld(:,:,1:srcv(ktyp,kid)%nlvl), kinfo )
+                  ib = 1
                   iu(:) = srcv(ktyp,kid)%nlvl
-               ENDIF
+                ENDIF
 
                llaction =  kinfo == OASIS_Recvd   .OR. kinfo == OASIS_FromRest .OR.   &
                   &        kinfo == OASIS_RecvOut .OR. kinfo == OASIS_FromRestOut
 
                IF ( sn_cfctl%l_oasout )   &
-                  &  WRITE(numout,*) "llaction, kinfo, kstep, ivarid: " , llaction, kinfo, kstep, srcv(ktyp,kid)%nid(ktyp,jc,jm)
+                  &  WRITE(numout,*) "llaction, kinfo, kstep, ivarid: " , llaction, kinfo, kstep, srcv(ktyp,kid)%nid(jc,jm)
 
                IF( llaction ) THEN   ! data received from oasis do not include halos
                   kinfo = OASIS_Rcv
@@ -507,7 +515,7 @@ CONTAINS
                   IF ( sn_cfctl%l_oasout ) THEN
                      WRITE(numout,*) '****************'
                      WRITE(numout,*) 'oasis_get: Incoming ', srcv(ktyp,kid)%clname
-                     WRITE(numout,*) 'oasis_get: ivarid '  , srcv(ktyp,kid)%nid(ktyp,jc,jm)
+                     WRITE(numout,*) 'oasis_get: ivarid '  , srcv(ktyp,kid)%nid(jc,jm)
                      WRITE(numout,*) 'oasis_get:   kstep', kstep
                      WRITE(numout,*) 'oasis_get:   info ', kinfo
                      WRITE(numout,*) '     - Minimum value is ', MINVAL(pdata(Nis0:Nie0,Njs0:Nje0,jc))
@@ -551,9 +559,9 @@ CONTAINS
       DO ji = 1, nmaxfld
          IF(ssnd(ktyp,ji)%laction ) THEN
             DO jm = 1, ncplmodel
-               IF( ssnd(ktyp,ji)%nid(ktyp,1,jm) /= -1 ) THEN
+               IF( ssnd(ktyp,ji)%nid(1,jm) /= -1 ) THEN
                   IF( TRIM(cdfieldname) == TRIM(ssnd(ktyp,ji)%clname) ) THEN
-                     id = ssnd(ktyp,ji)%nid(ktyp,1,jm)
+                     id = ssnd(ktyp,ji)%nid(1,jm)
                      mop = OASIS_Out
                   ENDIF
                ENDIF
@@ -563,9 +571,9 @@ CONTAINS
       DO ji = 1, nmaxfld
          IF(srcv(ktyp,ji)%laction ) THEN
             DO jm = 1, ncplmodel
-               IF( srcv(ktyp,ji)%nid(ktyp,1,jm) /= -1 ) THEN
+               IF( srcv(ktyp,ji)%nid(1,jm) /= -1 ) THEN
                   IF( TRIM(cdfieldname) == TRIM(srcv(ktyp,ji)%clname) ) THEN
-                     id = srcv(ktyp,ji)%nid(ktyp,1,jm)
+                     id = srcv(ktyp,ji)%nid(1,jm)
                      mop = OASIS_In
                   ENDIF
                ENDIF
