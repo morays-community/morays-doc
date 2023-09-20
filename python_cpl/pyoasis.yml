@@ -1,5 +1,5 @@
 name: pyoasis
-channel:
+channels:
   - defaults
   - conda-forge
 dependencies:
