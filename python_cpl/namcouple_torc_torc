@@ -6,7 +6,7 @@
 # Any line beginning with # is ignored. Blank lines are not allowed
 ####################################################################
  $NFIELDS 
-2
+4
  $END
 ############################################
  $RUNTIME 
@@ -18,17 +18,31 @@
  $END
 ############################################
  $STRINGS 
-O_GTF I_ML 1 86400 2 rst.nc EXPOUT
+O_SST DAT_SST 1 86400 2 rst.nc EXPOUT
 720 603 720 603 torc torc  LAG=0
 P 2 P 2 
 CHECKIN CHECKOUT 
 INT=1
 INT=1
 #
-O_ML I_GTF 1 86400 2 rst.nc EXPOUT
+INF_SST O_SSTVAR 1 86400 2 rst.nc EXPOUT
 720 603 720 603 torc torc  LAG=0
 P 2 P 2 
 CHECKIN CHECKOUT 
+INT=1
+INT=1
+#
+O_SVT DAT_SVT 1 86400 2 rst.nc EXPOUT
+720 603 720 603 torc torc LAG=0
+P 2 P 2
+CHECKIN CHECKOUT
+INT=1
+INT=1
+#
+INF_SVT O_SVTVAR 1 86400 2 rst.nc EXPOUT
+720 603 720 603 torc torc LAG=0
+P 2 P 2
+CHECKIN CHECKOUT
 INT=1
 INT=1
 #

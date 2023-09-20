@@ -32,9 +32,10 @@ MODULE infmod
    PUBLIC inf_rcv            ! routine called in
    PUBLIC inferences_final   ! routine called in nemogcm.F90
 
-   INTEGER, PARAMETER ::   jpgtf = 1   ! coupling for GeoTrainFlow
-   
-   INTEGER, PARAMETER ::   jpinf = 1   ! total number of inferences models
+   INTEGER, PARAMETER ::   jpgtf2 = 1   ! coupling for 2D GeoTrainFlow
+   INTEGER, PARAMETER ::   jpgtf3 = 2   ! coupling for 3D GeoTrainFlow 
+
+   INTEGER, PARAMETER ::   jpinf = 2   ! total number of inferences models
 
    TYPE( DYNARR ), SAVE, DIMENSION(jpinf) ::  infrcv  ! received inferences
    !
@@ -126,33 +127,52 @@ CONTAINS
       !
       IF( ln_inf .AND. .NOT. lk_oasis )   CALL ctl_stop( 'inferences_init : External inferences coupled via OASIS, but key_oasis3 disabled' )
       !
-      ! ============================ !
-      !   Define Models interfaces
-      ! ============================ !
-
+      !
+      ! ======================================== !
+      !     Define exchange needs for Models     !
+      ! ======================================== !
+      !
       ! default definitions of ssnd snd srcv
       srcv(ntypinf,:)%laction = .FALSE.  ;  srcv(ntypsbc,:)%clgrid = 'T'  ;  srcv(ntypinf,:)%nsgn = 1.
       srcv(ntypinf,:)%nct = 1  ;  srcv(ntypinf,:)%nlvl = 1
       !
       ssnd(ntypinf,:)%laction = .FALSE.  ;  ssnd(ntypsbc,:)%clgrid = 'T'  ;  ssnd(ntypinf,:)%nsgn = 1.
       ssnd(ntypinf,:)%nct = 1  ;  ssnd(ntypinf,:)%nlvl = 1
-      !
-      !                                 ! ---------------------- !
-      !                                 !      GeoTrainFlow      !
-      !                                 ! ---------------------- !
-      IF ( ln_inf ) THEN
-         ssnd(ntypinf,jpgtf)%clname = 'O_GTF'
-         ssnd(ntypinf,jpgtf)%laction = .TRUE.
+      
+      IF( ln_inf ) THEN
+      
+         ! -------------------------------- !
+         !      Kenigson et al. (2022)      !
+         ! -------------------------------- !
+      
+         ! Sea Surface Temp Field <=> Sea Surface Temp Variance
+         ssnd(ntypinf,jpgtf2)%clname = 'O_SST'
+         ssnd(ntypinf,jpgtf2)%laction = .TRUE.
 
-         srcv(ntypinf,jpgtf)%clname = 'I_GTF'
-         srcv(ntypinf,jpgtf)%laction = .TRUE.
+         srcv(ntypinf,jpgtf2)%clname = 'O_SSTVAR'
+         srcv(ntypinf,jpgtf2)%laction = .TRUE.
 
-         IF( inf_alloc() /= 0 )      CALL ctl_stop( 'STOP', 'inf_alloc : unable to allocate arrays' )
+         ! Sea Temp Field <=> Sea Temp Variance
+         ssnd(ntypinf,jpgtf3)%clname = 'O_SVT'
+         ssnd(ntypinf,jpgtf3)%laction = .TRUE.
+         ssnd(ntypinf,jpgtf3)%nlvl = 3 !jpk
+
+         srcv(ntypinf,jpgtf3)%clname = 'O_SVTVAR'
+         srcv(ntypinf,jpgtf3)%laction = .TRUE.
+         srcv(ntypinf,jpgtf3)%nlvl = 3 !jpk
+
+         ! ------------------------------ !
+         ! ------------------------------ !
+
+         IF( inf_alloc() /= 0 )     CALL ctl_stop( 'STOP', 'inf_alloc : unable to allocate arrays' )
          IF( inffld_alloc() /= 0 )  CALL ctl_stop( 'STOP', 'inffld_alloc : unable to allocate arrays' ) 
 
-         ! Define variables for coupling
-         CALL cpl_var(jpinf, jpinf, 1, ntypinf)
       END IF
+
+      ! ================================= !
+      !   Define variables for coupling
+      ! ================================= !
+      CALL cpl_var(jpinf, jpinf, 1, ntypinf)
       !
    END SUBROUTINE inferences_init
 
@@ -178,18 +198,34 @@ CONTAINS
       isec = ( kt - nit000 ) * NINT( rn_Dt )       ! Date of exchange 
       info = OASIS_idle
       !
-      IF( ssnd(ntypinf,jpgtf)%laction .AND. srcv(ntypinf,jpgtf)%laction ) THEN             ! Proceed exchange via OASIS for GeoTrainFlow
-
+      ! ------  Proceed exchanges via OASIS to get inferences ------
+      !
+      IF( ssnd(ntypinf,jpgtf2)%laction .AND. srcv(ntypinf,jpgtf2)%laction ) THEN 
+         
          ! Send temperature field
-         zdata(:,:,1) = ts(:,:,1,jp_tem,Kmm)
-         CALL cpl_snd( jpgtf, isec, ntypinf, zdata, info)
+         zdata(:,:,1:ssnd(ntypinf,jpgtf2)%nlvl) = ts(:,:,1:ssnd(ntypinf,jpgtf2)%nlvl,jp_tem,Kmm)
+         CALL cpl_snd( jpgtf2, isec, ntypinf, zdata, info)
 
          ! Get inference: temperature variance
-         CALL cpl_rcv( jpgtf, isec, ntypinf, infrcv(jpgtf)%z3, info)
-         sigmaT_2D(:,:) = infrcv(jpgtf)%z3(:,:,srcv(ntypinf,jpgtf)%nlvl)
+         CALL cpl_rcv( jpgtf2, isec, ntypinf, infrcv(jpgtf2)%z3, info)
+         sigmaT_2D(:,:) = infrcv(jpgtf2)%z3(:,:,1)
 
-         CALL iom_put( 'inf_sigmaT_2D', sigmaT_2D ) ! output temperature variance
-      ENDIF
+         CALL iom_put( 'inf_sigmaT_2D', sigmaT_2D(:,:) ) ! output 2D temperature variance
+       ENDIF
+       !
+       !
+       IF( ssnd(ntypinf,jpgtf3)%laction .AND. srcv(ntypinf,jpgtf3)%laction ) THEN
+
+         ! Send Temperature columns
+         zdata(:,:,1:ssnd(ntypinf,jpgtf3)%nlvl) = ts(:,:,1:ssnd(ntypinf,jpgtf3)%nlvl,jp_tem,Kmm)
+         CALL cpl_snd( jpgtf3, isec, ntypinf, zdata, info) 
+
+         ! Get inference: temprature variance
+         CALL cpl_rcv( jpgtf3, isec, ntypinf, infrcv(jpgtf3)%z3, info)
+         sigmaT_3D(:,:,1:srcv(ntypinf,jpgtf3)%nlvl) = infrcv(jpgtf3)%z3(:,:,1:srcv(ntypinf,jpgtf3)%nlvl)
+
+         CALL iom_put( 'inf_sigmaT_3D', sigmaT_3D(:,:,:) ) ! output 3D temperature variance
+       ENDIF
       !
       IF( ln_timing )   CALL timing_stop('inferences')
       !

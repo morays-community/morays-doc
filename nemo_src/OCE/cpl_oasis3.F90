@@ -78,11 +78,11 @@ MODULE cpl_oasis3
    INTEGER                    ::   nsnd         ! total number of fields sent
    INTEGER                    ::   ncplmodel    ! Maximum number of models to/from which NEMO is potentialy sending/receiving data
    INTEGER, PUBLIC, PARAMETER ::   nmaxfld=62   ! Maximum number of coupling fields
-   INTEGER, PUBLIC, PARAMETER ::   nmaxcat=5    ! Maximum number of coupling fields
-   INTEGER, PUBLIC, PARAMETER ::   nmaxcpl=5    ! Maximum number of coupling fields
+   INTEGER, PUBLIC, PARAMETER ::   nmaxcat=5    ! Maximum number of field categories
+   INTEGER, PUBLIC, PARAMETER ::   nmaxcpl=5    ! Maximum number of coupling models
    INTEGER, PUBLIC, PARAMETER ::   ntypmax=2    ! Maximum number of coupling types
-   INTEGER, PUBLIC, PARAMETER ::   ntypsbc=1    ! Surface conditions coupling type
-   INTEGER, PUBLIC, PARAMETER ::   ntypinf=2    ! Inference models coupling type
+   INTEGER, PUBLIC, PARAMETER ::   ntypsbc=1    ! Coupling type: Surface Conditions
+   INTEGER, PUBLIC, PARAMETER ::   ntypinf=2    ! Coupling type: Inferences Models
 
 
    TYPE, PUBLIC ::   FLD_CPL               !: Type for coupling field information
@@ -102,7 +102,7 @@ MODULE cpl_oasis3
       REAL(wp), POINTER, DIMENSION(:,:,:) ::   z3 
    END TYPE DYNARR
 
-   REAL(wp), DIMENSION(:,:), ALLOCATABLE ::   exfld   ! Temporary buffer for receiving
+   REAL(wp), DIMENSION(:,:,:), ALLOCATABLE ::   exfld   ! Temporary buffer for receiving
 
    !!----------------------------------------------------------------------
    !! NEMO/OCE 4.0 , NEMO Consortium (2018)
@@ -166,7 +166,7 @@ CONTAINS
       !
       ! ... Allocate memory for data exchange
       !
-      ALLOCATE(exfld(Ni_0, Nj_0), stat = nerror)        ! allocate only inner domain (without halos)
+      ALLOCATE(exfld(Ni_0, Nj_0, jpk), stat = nerror)        ! allocate only inner domain (without halos)
       IF( nerror > 0 ) THEN
          CALL oasis_abort ( ncomp_id, 'cpl_domain', 'Failure in allocating exfld')   ;   RETURN
       ENDIF
@@ -251,6 +251,13 @@ CONTAINS
                RETURN
             ENDIF
 
+            IF( ssnd(ktyp,ji)%nlvl > 1 .AND. ( ssnd(ktyp,ji)%ncplmodel > 1 .OR. ssnd(ktyp,ji)%nct > 1 ) ) THEN
+               CALL oasis_abort ( ncomp_id, 'cpl_var', '3D fields (nlvl > 1) with several coupling models or   &
+                  &               categories not supported yet, redefine '//TRIM(ssnd(ktyp,ji)%clname))
+          
+               RETURN
+            ENDIF
+
             DO jc = 1, ssnd(ktyp,ji)%nct
                DO jm = 1, kcplmodel
 
@@ -294,6 +301,12 @@ CONTAINS
             IF( srcv(ktyp,ji)%nct > nmaxcat ) THEN
                CALL oasis_abort ( ncomp_id, 'cpl_var', 'Number of categories of '//   &
                   &              TRIM(srcv(ktyp,ji)%clname)//' is larger than nmaxcat, increase nmaxcat' )
+               RETURN
+            ENDIF
+
+            IF( srcv(ktyp,ji)%nlvl > 1 .AND. ( srcv(ktyp,ji)%ncplmodel > 1 .OR. srcv(ktyp,ji)%nct > 1 ) ) THEN
+               CALL oasis_abort ( ncomp_id, 'cpl_var', '3D fields (nlvl > 1) with several coupling models or   &
+                  &               categories not supported yet, redefine '//TRIM(srcv(ktyp,ji)%clname))
                RETURN
             ENDIF
 
@@ -386,7 +399,11 @@ CONTAINS
       REAL(wp), DIMENSION(:,:,:), INTENT(in   ) ::   pdata
       !!
       INTEGER                                   ::   jc,jm     ! local loop index
+      LOGICAL                                   ::   ll3D
       !!--------------------------------------------------------------------
+      !
+      ll3D = .FALSE.
+      IF( ssnd(ktyp,kid)%nlvl > 1 ) ll3D = .TRUE.
       !
       ! snd data to OASIS3
       !
@@ -394,7 +411,12 @@ CONTAINS
          DO jm = 1, ssnd(ktyp,kid)%ncplmodel
 
             IF( ssnd(ktyp,kid)%nid(ktyp,jc,jm) /= -1 ) THEN   ! exclude halos from data sent to oasis
-               CALL oasis_put ( ssnd(ktyp,kid)%nid(ktyp,jc,jm), kstep, pdata(Nis0:Nie0, Njs0:Nje0,jc), kinfo )
+
+               IF( .NOT. ll3D ) THEN   ! send 2D or 3D fields
+                  CALL oasis_put ( ssnd(ktyp,kid)%nid(ktyp,jc,jm), kstep, pdata(Nis0:Nie0, Njs0:Nje0,jc), kinfo )
+               ELSE 
+                  CALL oasis_put ( ssnd(ktyp,kid)%nid(ktyp,jc,jm), kstep, pdata(Nis0:Nie0, Njs0:Nje0,1:ssnd(ktyp,kid)%nlvl), kinfo )
+               ENDIF
 
                IF ( sn_cfctl%l_oasout ) THEN
                   IF ( kinfo == OASIS_Sent     .OR. kinfo == OASIS_ToRest .OR.   &
@@ -433,13 +455,17 @@ CONTAINS
       REAL(wp), DIMENSION(:,:,:), INTENT(inout)           ::   pdata     ! IN to keep the value if nothing is done
       REAL(wp), DIMENSION(:,:,:), INTENT(in   ), OPTIONAL ::   pmask     ! coupling mask
       !!
-      INTEGER                                                           ::   jc,jm     ! local loop index
-      LOGICAL                                                           ::   llaction, ll_1st, ll_mask
+      INTEGER                                             ::   jc,jm              ! local loop index
+      INTEGER                                             ::   ib = 1, iu(2) = 1  ! bottom/up array indexes
+      LOGICAL                                             ::   llaction, ll_1st, ll_mask, ll3D
       !!--------------------------------------------------------------------
       !
       ! Default value
       ll_mask = .FALSE.
       IF( PRESENT( pmask ) ) ll_mask = .TRUE.
+      !
+      ll3D = .FALSE.
+      IF( srcv(ktyp,kid)%nlvl > 1 ) ll3D = .TRUE.
       !
       ! receive local data from OASIS3 on every process
       !
@@ -452,7 +478,14 @@ CONTAINS
 
             IF( srcv(ktyp,kid)%nid(ktyp,jc,jm) /= -1 ) THEN
 
-               CALL oasis_get ( srcv(ktyp,kid)%nid(ktyp,jc,jm), kstep, exfld, kinfo )
+               IF( .NOT. ll3D ) THEN   ! Receive 2D or 3D field
+                  CALL oasis_get ( srcv(ktyp,kid)%nid(ktyp,jc,jm), kstep, exfld(:,:,1), kinfo )
+                  ib = jc
+                  iu(2) = jc
+               ELSE
+                  CALL oasis_get ( srcv(ktyp,kid)%nid(ktyp,jc,jm), kstep, exfld(:,:,1:srcv(ktyp,kid)%nlvl), kinfo )
+                  iu(:) = srcv(ktyp,kid)%nlvl
+               ENDIF
 
                llaction =  kinfo == OASIS_Recvd   .OR. kinfo == OASIS_FromRest .OR.   &
                   &        kinfo == OASIS_RecvOut .OR. kinfo == OASIS_FromRestOut
@@ -461,15 +494,14 @@ CONTAINS
                   &  WRITE(numout,*) "llaction, kinfo, kstep, ivarid: " , llaction, kinfo, kstep, srcv(ktyp,kid)%nid(ktyp,jc,jm)
 
                IF( llaction ) THEN   ! data received from oasis do not include halos
-
                   kinfo = OASIS_Rcv
-                  IF( ll_mask ) exfld(:,:) = exfld(:,:) * pmask(Nis0:Nie0,Njs0:Nje0,jm)
+                  IF( ll_mask ) exfld(:,:,1:iu(1)) = exfld(:,:,1:iu(1)) * pmask(Nis0:Nie0,Njs0:Nje0,jm:jm)
 
                   IF( ll_1st ) THEN
-                     pdata(Nis0:Nie0,Njs0:Nje0,jc) = exfld(:,:)
+                     pdata(Nis0:Nie0,Njs0:Nje0,ib:iu(2)) = exfld(:,:,1:iu(1))
                      ll_1st = .FALSE.
                   ELSE
-                     pdata(Nis0:Nie0,Njs0:Nje0,jc) = pdata(Nis0:Nie0,Njs0:Nje0,jc) + exfld(:,:)
+                     pdata(Nis0:Nie0,Njs0:Nje0,ib:iu(2)) = pdata(Nis0:Nie0,Njs0:Nje0,ib:iu(2)) + exfld(:,:,1:iu(1))
                   ENDIF
 
                   IF ( sn_cfctl%l_oasout ) THEN
@@ -483,9 +515,7 @@ CONTAINS
                      WRITE(numout,*) '     -     Sum value is ',    SUM(pdata(Nis0:Nie0,Njs0:Nje0,jc))
                      WRITE(numout,*) '****************'
                   ENDIF
-
                ENDIF
-
             ENDIF
 
          ENDDO
