@@ -11,7 +11,7 @@ This repository contains sources for the development of interfaces between NEMO 
 **Coupling Strategy**
 
 OASIS is a Fortran coupling library that performs field exchanges between two coupled executables. Last release provided C and Python APIs, which enables coupling between non-homogeneously written codes. 
-Communication of data between NEMO and Python is done with OASIS. Here is a [guide](https://github.com/alexis-barge/smart-morey/blob/main/pyOASIS_NEMO.md) to install and use the OASIS Python API with NEMO.
+Communication of data between NEMO and Python is done with OASIS. Here is a [guide](https://github.com/alexis-barge/smart-morey/blob/main/python_cpl/pyOASIS_NEMO.md) to install and use the OASIS Python API with NEMO.
 
 ## Nemo Sources: *nemo_src*
 
