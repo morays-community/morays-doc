@@ -164,15 +164,15 @@ CONTAINS
          ! ------------------------------ !
          ! ------------------------------ !
 
-         IF( inf_alloc() /= 0 )     CALL ctl_stop( 'STOP', 'inf_alloc : unable to allocate arrays' )
-         IF( inffld_alloc() /= 0 )  CALL ctl_stop( 'STOP', 'inffld_alloc : unable to allocate arrays' ) 
-
       END IF
 
       ! ================================= !
       !   Define variables for coupling
       ! ================================= !
       CALL cpl_var(jpinf, jpinf, 1, ntypinf)
+      !
+      IF( inf_alloc() /= 0 )     CALL ctl_stop( 'STOP', 'inf_alloc : unable to allocate arrays' )
+      IF( inffld_alloc() /= 0 )  CALL ctl_stop( 'STOP', 'inffld_alloc : unable to allocate arrays' ) 
       !
    END SUBROUTINE inferences_init
 

@@ -11,7 +11,6 @@ MODULE inffld
    !!----------------------------------------------------------------------        
    !!=====================================================
    USE par_oce        ! ocean parameters
-   USE in_out_manager ! I/O manager
    USE lib_mpp        ! MPP library
 
    IMPLICIT NONE

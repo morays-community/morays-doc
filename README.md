@@ -1,39 +1,42 @@
-# smart-morey
+# Smart Morey
 
-**Populate ocean with artificially intelligent snakes** 
+#### ***Populate ocean with artificially intelligent snakes*** 
 
-This repository contains sources for the development of interfaces between NEMO and python-written Machine Learning features via OASIS. 
+This repository contains sources for the development of interfaces between NEMO and Python written Machine Learning libraries via OASIS. 
 
-The long term objectives are:
-  - create an API into NEMO to easily implement models that needs data/inferences exchange with ML components
-  - build a python code that manages the data treatment in accordance with inferences asked by NEMO models or users
+**Long term objectives:**
+  - Create an API into NEMO to easily implement models that needs data/inferences exchange with ML components
+  - Build a python code that manages the data treatment in accordance with inferences asked by NEMO models or users
 
-**MAIN ROADMAP**
-  * I: ~~perform dummy exchanges between NEMO and python code with OASIS~~
-  * II: send data from NEMO to python, successfully call a ML component, send back the inference and write it in an ouptut file
-  * III: ...
+**Coupling Strategy**
 
-## Nemo Sources
+OASIS is a Fortran coupling library that performs field exchanges between two coupled executables. Last release provided C and Python APIs, which enables coupling between non-homogeneously written codes. 
+Communication of data between NEMO and Python is done with OASIS. Here is a [guide](https://github.com/alexis-barge/smart-morey/blob/main/pyOASIS_NEMO.md) to install and use the OASIS Python API with NEMO.
 
-Sanding box to modify NEMO sources. Copy them in the `MY_SRC` directory of a NEMO_v4.2.1 config to use them.
+## Nemo Sources: *nemo_src*
 
-**Main modifications (under assumption of testing) : 18/09/2023**
-  * OASIS coupling module `cpl_oasis.F90` was managed by SBC module since it is only used for exchanges with atmosphere or SAS module.
+Sanding box for NEMO sources. Copy them in the `MY_SRC` directory of a NEMO_v4.2.1 config.
+
+**Main modifications (under assumption of testing) : 20/09/2023**
+  * Architecture: OASIS coupling module `cpl_oasis.F90` was initially managed by SBC module
       - OASIS environnement is now totally managed by NEMO main routines in `nemogcm.F90`
-      - Coupling module can now be called by any other module to define variables to exchange, send and receive them on demand
+      - Coupling module is independent and can be called by any other module to define coupling variables, send and receive them on demand
+      - Now possible to perform exchange of 3D fields (OASIS_v5 needed)
 
       [ ADD A DRAWING ]
 
-  * Properties of variables and exchanges were stored in meta-arrays `ssnd` and `srcv` in coupling module
+  * Properties of coupling variables are stored in meta-arrays `ssnd` and `srcv` in coupling module
       - Dimension added to the array to sort meta-data between calling modules
-        
-  * `infmod.F90` : module dedicated to Inference Models, can call coupling module -- /!\ HARD-CODED DUMMY MODELS FOR NOW /!\
-  * `inffld.F90` : memory management for inference model fields
 
-## Inferences Models
+  * New modules:        
+      - `infmod.F90` : module dedicated to Inference Models management 
+         /!\ HARD-CODED DUMMY MODELS FOR NOW /!\
+      - `inffld.F90` : memory management for inference models needed fields
 
-Python sources for the Machine Learning features API.
+## Python Coupling: *python_cpl*
 
-**Does for now**
+Python sources for Machine Learning treatment and coupling materials.
+
+**Sources do:**
   * initialize OASIS coupling environnement
-  * receive and send data
+  * receive 2D/3D data from ocean, send back dummy fields

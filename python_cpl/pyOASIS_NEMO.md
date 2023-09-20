@@ -22,10 +22,12 @@ OASIS needs to be compiled first because both XIOS and NEMO depend on it.
 
 * Define the following flags to ensure dynamic compilation :
 
- ``` DYNOPT = -fPIC ```
- ``` LDDYNOPT = -shared ${NETCDF_LIBRARY} ```
+    ``` DYNOPT = -fPIC ```
+
+    ``` LDDYNOPT = -shared ${NETCDF_LIBRARY} ```
 
     Do not forget to add an include path to the new `cbindings` module directory.
+
 
 * Run Makefile:
 
@@ -41,6 +43,7 @@ OASIS needs to be compiled first because both XIOS and NEMO depend on it.
 * Source the following files to initialize the PyOASIS modules. The best is to put those commands in your `.bash_profile`:
 
     ``` source /PATH/TO/oasis3-mct/BLD/python/init.sh ```
+
     ``` source /PATH/TO/oasis3-mct/BLD/python/init.csh ```
 
 * Some python packages are required to use PyOASIS. Use your favorite python environnment manager to install and load them:
@@ -51,7 +54,7 @@ OASIS needs to be compiled first because both XIOS and NEMO depend on it.
 
         matplotlib         scipy         shapely         cartopy         pytest
 
-    **NB:** See PyOASIS documention for more details.
+    **NB:** See PyOASIS documentation for more details.
 
 ## Testing PyOASIS
 
