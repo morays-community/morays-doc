@@ -1,3 +1,6 @@
+# Building directory
+python_cpl/src/moray.egg-info
+
 # Prerequisites
 *.d
 
