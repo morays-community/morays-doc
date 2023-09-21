@@ -1,4 +1,4 @@
-# Smart Morey
+# Smart Moray
 
 #### ***Populate ocean with artificially intelligent snakes*** 
 
