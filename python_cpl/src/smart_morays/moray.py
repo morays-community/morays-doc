@@ -1,6 +1,6 @@
 #import argparse
 import logging
-import pycpl
+import smart_morays.pycpl as pycpl
 
 def main():
 

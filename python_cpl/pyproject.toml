@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "moray"
+name = "smart_morays"
 version = "0.0.0"
 description = "NEMO-Machine Learning tools coupling"
 authors = [
