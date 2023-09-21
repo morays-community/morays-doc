@@ -17,8 +17,8 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/alexis-barge/smart-moray"
-"Bug Tracker" = "https://github.com/alexis-barge/smart-moray/issues"
+"Homepage" = "https://github.com/alexis-barge/smart-morays"
+"Bug Tracker" = "https://github.com/alexis-barge/smart-morays/issues"
 
 [tool.setuptools]
 package-dir = {}

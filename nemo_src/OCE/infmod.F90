@@ -211,10 +211,10 @@ CONTAINS
          sigmaT_2D(:,:) = infrcv(jpgtf2)%z3(:,:,1)
 
          CALL iom_put( 'inf_sigmaT_2D', sigmaT_2D(:,:) ) ! output 2D temperature variance
-       ENDIF
-       !
-       !
-       IF( ssnd(ntypinf,jpgtf3)%laction .AND. srcv(ntypinf,jpgtf3)%laction ) THEN
+      ENDIF
+      !
+      !
+      IF( ssnd(ntypinf,jpgtf3)%laction .AND. srcv(ntypinf,jpgtf3)%laction ) THEN
 
          ! Send Temperature columns
          zdata(:,:,1:ssnd(ntypinf,jpgtf3)%nlvl) = ts(:,:,1:ssnd(ntypinf,jpgtf3)%nlvl,jp_tem,Kmm)
@@ -225,7 +225,7 @@ CONTAINS
          sigmaT_3D(:,:,1:srcv(ntypinf,jpgtf3)%nlvl) = infrcv(jpgtf3)%z3(:,:,1:srcv(ntypinf,jpgtf3)%nlvl)
 
          CALL iom_put( 'inf_sigmaT_3D', sigmaT_3D(:,:,:) ) ! output 3D temperature variance
-       ENDIF
+      ENDIF
       !
       IF( ln_timing )   CALL timing_stop('inferences')
       !
