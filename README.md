@@ -1,6 +1,6 @@
 # Smart Morays
 
-#### ***Multiply Ocean Relevance with ArtificiallY intelligent Snakes*** 
+#### ***Mimicking Ocean Relevance with ArtificiallY intelligent Snakes*** 
 
 This repository contains sources for the development of interfaces between NEMO and Python written Machine Learning libraries via OASIS. 
 
