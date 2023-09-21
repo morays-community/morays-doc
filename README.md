@@ -38,7 +38,7 @@ Sanding box for NEMO sources. Copy them in the `MY_SRC` directory of a NEMO_v4.2
 </tr>
 <tr>
 <td>
-<img width="512" alt="archi_nemo_old" src="https://github.com/alexis-barge/smart-morey/assets/138531178/bf8aed26-693a-4b34-8ce8-bc2f2da1b2c9">
+<img width="510" alt="archi_nemo_old" src="https://github.com/alexis-barge/smart-morey/assets/138531178/d68820ef-10b2-459c-afaf-603f2dc4add8">
 </td>
 <td>
 <img width="466" alt="archi_nemo_new" src="https://github.com/alexis-barge/smart-morey/assets/138531178/8e2ac17a-2168-4aa0-9bc9-e666cd66dc5c">
