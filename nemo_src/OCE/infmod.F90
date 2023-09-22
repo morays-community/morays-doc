@@ -133,10 +133,10 @@ CONTAINS
       ! ======================================== !
       !
       ! default definitions of ssnd snd srcv
-      srcv(ntypinf,:)%laction = .FALSE.  ;  srcv(ntypsbc,:)%clgrid = 'T'  ;  srcv(ntypinf,:)%nsgn = 1.
+      srcv(ntypinf,:)%laction = .FALSE.  ;  srcv(ntypinf,:)%clgrid = 'T'  ;  srcv(ntypinf,:)%nsgn = 1.
       srcv(ntypinf,:)%nct = 1  ;  srcv(ntypinf,:)%nlvl = 1
       !
-      ssnd(ntypinf,:)%laction = .FALSE.  ;  ssnd(ntypsbc,:)%clgrid = 'T'  ;  ssnd(ntypinf,:)%nsgn = 1.
+      ssnd(ntypinf,:)%laction = .FALSE.  ;  ssnd(ntypinf,:)%clgrid = 'T'  ;  ssnd(ntypinf,:)%nsgn = 1.
       ssnd(ntypinf,:)%nct = 1  ;  ssnd(ntypinf,:)%nlvl = 1
       
       IF( ln_inf ) THEN

@@ -71,6 +71,9 @@ def pycpl():
     dat_sst = pyoasis.Var(var_in[0],partition,OASIS.IN,bundle_size=1)
     dat_svt = pyoasis.Var(var_in[1],partition,OASIS.IN,bundle_size=nlvl)
 
+    if comm_rank == 0:
+        logging.info('Var id : %.1i %.1i' % (dat_sst._id, dat_svt._id))
+
     # sent variables
     inf_sst = pyoasis.Var(var_out[0],partition,OASIS.OUT,bundle_size=1)
     inf_svt = pyoasis.Var(var_out[1],partition,OASIS.OUT,bundle_size=nlvl)
@@ -118,7 +121,8 @@ def pycpl():
         if it_sec%dat_sst.cpl_freqs[0] == 0.0:
             logging.info('  Waiting for receiving %s at time %.1i / %.1i ' % (dat_sst._name,it_sec,total_time))
 
-        dat_sst.get(it_sec,sst)
+        if dat_sst._id != -1:
+            dat_sst.get(it_sec,sst)
 
         if it_sec%dat_sst.cpl_freqs[0] == 0.0 and comm_rank == 0:
             logging.info('  Receiving successful')
@@ -131,7 +135,8 @@ def pycpl():
         if it_sec%inf_sst.cpl_freqs[0] == 0.0:
             logging.info('  Waiting for sending %s at time %.1i / %.1i ' % (inf_sst._name,it_sec,total_time))
  
-        inf_sst.put(it_sec,var_sst)
+        if inf_sst._id != -1:
+            inf_sst.put(it_sec,var_sst)
 
         if it_sec%inf_sst.cpl_freqs[0] == 0.0 and comm_rank == 0:
             logging.info('  Sending successful')
@@ -142,7 +147,8 @@ def pycpl():
         if it_sec%dat_svt.cpl_freqs[0] == 0.0:
             logging.info('  Waiting for receiving %s at time %.1i / %.1i ' % (dat_svt._name,it_sec,total_time))
 
-        dat_svt.get(it_sec,svt)
+        if dat_svt._id != -1:
+            dat_svt.get(it_sec,svt)
 
         if it_sec%dat_svt.cpl_freqs[0] == 0.0 and comm_rank == 0:
             logging.info('  Receiving successful')
@@ -154,11 +160,13 @@ def pycpl():
         # send back field to Ocean
         if it_sec%inf_svt.cpl_freqs[0] == 0.0:
             logging.info('  Waiting for sending %s at time %.1i / %.1i ' % (inf_svt._name,it_sec,total_time))
- 
-        inf_svt.put(it_sec,var_svt)
 
+        if inf_svt._id != -1:
+            inf_svt.put(it_sec,var_svt)
+
+        
         if it_sec%inf_svt.cpl_freqs[0] == 0.0 and comm_rank == 0:
-            logging.info('  Sending successful')
+           logging.info('  Sending successful')
 
     if comm_rank == 0:
         logging.info('  End Of Loop')

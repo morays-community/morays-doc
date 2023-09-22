@@ -530,7 +530,7 @@ CONTAINS
 
          !--- we must call lbc_lnk to fill the halos that where not received.
          IF( .NOT. ll_1st ) THEN
-            !CALL lbc_lnk( 'cpl_oasis3', pdata(:,:,jc), srcv(ktyp,kid)%clgrid, srcv(ktyp,kid)%nsgn )
+            CALL lbc_lnk( 'cpl_oasis3', pdata(:,:,ib:iu(2)), srcv(ktyp,kid)%clgrid, srcv(ktyp,kid)%nsgn )
          ENDIF
 
       ENDDO
