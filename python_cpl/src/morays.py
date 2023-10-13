@@ -1,6 +1,6 @@
 #import argparse
 from smart_morays.pycpl import open_tunnel, Tunnel
-from smart_morays.inferences import Model
+import smart_morays.inferences as Models
 from smart_morays.loop import init_morays, coupled_run, finish_morays, Freqs
 
 def main():
@@ -29,7 +29,7 @@ def main():
                         })
     
     
-    gtf = LTPytorch_Model('GeoTrainFlow')
+    gtf = Models.LTPytorch_Model('GeoTrainFlow')
 
     #  Run Simulation
     # ++++++++++++++++

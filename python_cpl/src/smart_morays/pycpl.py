@@ -2,180 +2,135 @@
 import pyoasis
 from pyoasis import OASIS
 from mpi4py import MPI
-# utils modules
-import f90nml as nml
-import numpy
+# utils
+import numpy as np
 import logging
+import os
+import shutil
 
 logger = logging.getLogger(__name__)
 
-def pycpl():
-    # +++++++++++++++++++
-    #   INITIALISATION
-    # +++++++++++++++++++
-    comm = MPI.COMM_WORLD
-    component_name = 'moray'
-    comp = pyoasis.Component(component_name,True,comm)
+class Tunnel:
 
-    comm_rank = comp.localcomm.rank
-    comm_size = comp.localcomm.size
-
-    if comm_rank == 0:
-        logging.info('  -----------------------------------------------------------')
-        logging.info('  Component name: %s with ID: %.1i' % (component_name,comp._id))
-        logging.info('  Running with %.1i processes' % comm_size)
-        logging.info('  -----------------------------------------------------------')
-
-    # ++++++++++++++++++++
-    #   GRID DEFINITION
-    # ++++++++++++++++++++
-    # Grid info directly given for now --> TO BE IMPROVED
-    grid = 'torc'
-    if grid == 'torc':
-        grd_src = 'torc'
-        nlon = 720
-        nlat = 603
-        nlvl = 3 #121
-    else:
-        grd_src = 'lmdz'
-        nlon = 180
-        nlat = 148
-
-    if comm_rank == 0:
-        logging.info('  Grid name : %s' % grd_src)
-        logging.info('  Grid size : %.1i %.1i %.1i' % (nlon, nlat, nlvl))
-        logging.info('  End Of Grid Def')
-
-    # +++++++++++++++++++++++++
-    #   PARTITION DEFINITION
-    # +++++++++++++++++++++++++
-    local_size = int(nlon * nlat / comm_size)
-    offset = comm_rank * local_size
-
-    if comm_rank == comm_size - 1:
-        local_size = nlon * nlat - offset
-
-    partition = pyoasis.ApplePartition(offset,local_size)
-    part_id = partition._id
-
-    if comm_rank == 0:
-        logging.info('  End Of Part Def')
-
-    # +++++++++++++++++++++++++
-    #   VARIABLES DEFINITION
-    # +++++++++++++++++++++++++
-    var_in = ['DAT_SST','DAT_SVT']
-    var_out = ['INF_SST','INF_SVT']
-
-    # received variables (bundle_size is equivalent to second value of var_nodim in F90)
-    dat_sst = pyoasis.Var(var_in[0],partition,OASIS.IN,bundle_size=1)
-    dat_svt = pyoasis.Var(var_in[1],partition,OASIS.IN,bundle_size=nlvl)
-
-    if comm_rank == 0:
-        logging.info('Var id : %.1i %.1i' % (dat_sst._id, dat_svt._id))
-
-    # sent variables
-    inf_sst = pyoasis.Var(var_out[0],partition,OASIS.OUT,bundle_size=1)
-    inf_svt = pyoasis.Var(var_out[1],partition,OASIS.OUT,bundle_size=nlvl)
-
-    if comm_rank == 0:
-        logging.info('  End Of Var Def')
-
-    # +++++++++++++++++++++++++
-    #   END OF DEFINITION
-    # +++++++++++++++++++++++++
-
-    comp.enddef()
-
-    if comm_rank == 0:
-        logging.info('  End Of Definition')
-
-
-    # +++++++++++++++++++++++++
-    #   RUN EXCHANGES
-    # +++++++++++++++++++++++++
-
-    # Get namelists
-    namelist = nml.read('namelist_cfg')
-
-    time_step = int( namelist['namdom']['rn_Dt']  )
-    niter = int( namelist['namrun']['nn_itend'] - namelist['namrun']['nn_it000'] )
-    total_time = niter*time_step
-
-    if comm_rank == 0:
-        logging.info('  -----------------------------------------------------------')
-        logging.info('  Number of iterations : %.1i' % niter)
-        logging.info('  Time step : %.1i' % time_step)
-        logging.info('  Simulation length : %.1i' % total_time)
-        logging.info('  -----------------------------------------------------------')
-
-    # Init Field
-    # NB: Fields to send/receive must be formatted with pyoasis.asarray
-    sst = pyoasis.asarray( numpy.zeros((local_size,1)) )
-    svt = pyoasis.asarray( numpy.zeros((local_size,nlvl)) )
-
-    for it in range(niter):
-        it_sec = int(time_step * it)
-
-        # receive field from Ocean
-        if it_sec%dat_sst.cpl_freqs[0] == 0.0:
-            logging.info('  Waiting for receiving %s at time %.1i / %.1i ' % (dat_sst._name,it_sec,total_time))
-
-        if dat_sst._id != -1:
-            dat_sst.get(it_sec,sst)
-
-        if it_sec%dat_sst.cpl_freqs[0] == 0.0 and comm_rank == 0:
-            logging.info('  Receiving successful')
-
-        # Modify field
-        if it_sec%inf_sst.cpl_freqs[0] == 0.0:
-            var_sst = pyoasis.asarray( sst + 10.0 )
-
-        # send back field to Ocean
-        if it_sec%inf_sst.cpl_freqs[0] == 0.0:
-            logging.info('  Waiting for sending %s at time %.1i / %.1i ' % (inf_sst._name,it_sec,total_time))
- 
-        if inf_sst._id != -1:
-            inf_sst.put(it_sec,var_sst)
-
-        if it_sec%inf_sst.cpl_freqs[0] == 0.0 and comm_rank == 0:
-            logging.info('  Sending successful')
-
-        # == == == ==
-
-        # receive field from Ocean
-        if it_sec%dat_svt.cpl_freqs[0] == 0.0:
-            logging.info('  Waiting for receiving %s at time %.1i / %.1i ' % (dat_svt._name,it_sec,total_time))
-
-        if dat_svt._id != -1:
-            dat_svt.get(it_sec,svt)
-
-        if it_sec%dat_svt.cpl_freqs[0] == 0.0 and comm_rank == 0:
-            logging.info('  Receiving successful')
-
-        # Modify field
-        if it_sec%inf_svt.cpl_freqs[0] == 0.0:
-            var_svt = pyoasis.asarray( svt + 100.0 )
-
-        # send back field to Ocean
-        if it_sec%inf_svt.cpl_freqs[0] == 0.0:
-            logging.info('  Waiting for sending %s at time %.1i / %.1i ' % (inf_svt._name,it_sec,total_time))
-
-        if inf_svt._id != -1:
-            inf_svt.put(it_sec,var_svt)
-
+    def __init__(self,label="morays"):
+        self.comp = pyoasis.Component(label,True,MPI.COMM_WORLD)
+        self.comm_rank = self.comp.localcomm.rank
+        self.comm_size = self.comp.localcomm.size
         
-        if it_sec%inf_svt.cpl_freqs[0] == 0.0 and comm_rank == 0:
-           logging.info('  Sending successful')
+        self.partitions = {}
+        self.variables = { "rcv" : {} , "snd" : {} }
 
-    if comm_rank == 0:
-        logging.info('  End Of Loop')
+    def __del__(self):
+        del self.comp
+  
+    def define_partitions(self,grids):
+        self.grids = grids
+        
+        """ /!\ TODO: découpage optimal des grilles /!\ """
+        # Create Partitions
+        for grd_lbl,(nlon,nlat) in grids.items():
+            local_size = int( nlon * nlat / self.comm_size )
+            offset = self.comm_rank * self.local_size
+        
+            if self.comm_rank == self.comm_size - 1:
+                local_size = nlon * nlat - offset
+                
+            self.partitions.update({ grd_lbl : pyoasis.ApplePartition(offset,local_size,name=grd_lbl) })
+
+    def add_variables_for_exchanges(self,vars):
+        self.vars = vars
+        for i, var in enumerate(vars):
+            self.exchanges["rcv"].update({ var['in'] : pyoasis.Var( "M_IN_"+str(i+1+len(exchanges["rcv"])), self.partitions[var['grd']], OASIS.IN, bundle_size=var['lvl']) })
+            self.exchanges["snd"].update({ var['out'] : pyoasis.Var( "M_OUT_"+str(i+1+len(exchanges["snd"])), self.partitions[var['grd']], OASIS.OUT, bundle_size=var['lvl']) })
+    
+    def send(self,var_label,date,values):
+        var = self.exchanges["snd"][var_label]
+        snd_fld = pyoasis.asarray(values)
+        
+        if snd_fld.shape != 3 :
+            logging.error('  Shape of sending array for var %s must be 3' % (var_label))
+            quit()
+        
+        if (snd_fld.shape[0]*snd_fld.shape[1], snd_fld.shape[2]) != (var._partition_local_size, var.bundle_size):
+            logging.error('  Size of sending array for var %s does not match associated partition' % (var_label))
+            quit()
+            
+        var.put(date,snd_fld)
+
+    def receive(self,var_label,date):
+        var = self.exchanges["rcv"][var_label]
+        rcv_fld = pyoasis.asarray( np.zeros((var._partition_local_size,var.bundle_size)) )
+        var.get(date,rcv_fld)
+        return rcv_fld
 
 
-    # +++++++++++++++++++++++++
-    #   TERMINATION
-    # +++++++++++++++++++++++++
-    del comp
+def open_tunnel(label,grids,vars):
 
-    if comm_rank == 0:
-        logging.info('  End Of The Program')
+    tunnel = Tunnel(label)
+
+    if tunnel.comm_rank == 0:
+        logging.info('  ----------------------- TUNNEL CREATED --------------------------')
+        logging.info('  Component %s initialized with ID: %.1i' % (tunnel.comp._name,tunnel.comp._id))
+        logging.info('  Running with %.1i processes' % tunnel.comm_size)
+
+    tunnel.define_partitions(grids)
+    if tunnel.comm_rank == 0:
+        logging.info('  Grids registered')
+
+    tunnel.add_variables_for_exchanges(vars)
+    if tunnel.comm_rank == 0:
+        logging.info('  Variables registered')
+
+    if tunnel.comm_rank == 0:
+        write_oasis_namelist(tunnel)
+        logging.info('  -----------------------------------------------------------')
+
+    
+    tunnel.comp.enddef()
+
+    return tunnel
+    
+    
+def write_oasis_namelist(tunnel):
+            
+    namcouple = os.path.join(os.getcwd(),"namcouple")
+    shutil.copy(os.path.join(os.path.abspath(smart_morays.__file__)[:-24],"namcouple_base"),namcouple)
+
+    logging.info('  Writing %s' % namcouple)
+
+    # Write exchanges in namelist
+    file = open(namcouple,'a')
+    file.write(" $STRINGS\n")
+    
+    for inout,ex in tunnel.exchanges.items():
+        for lbl,var in ex.items():
+            if inout == "rcv":
+                name_snd = var.name()
+                name_rcv = "O_OUT_"+name_snd[-1:]
+            if inout == "snd":
+                name_rcv = var.name()
+                name_snd = "O_IN_"+name_rcv[-1:]
+                
+            idx = [i for i, dic in enumerate(tunnel.vars) if lbl in dic.values()][0]
+            grd_lbl = tunnel.vars[idx]['grd']
+            freq = tunnel.vars[idx]['freq']
+            nlon, nlat = tunnel.grids[grd_lbl]
+            
+        bloc = name_snd+" "+name_rcv+" 1 "+str(freq)+" 2 rst.nc EXPOUT\n" \
+               +str(nlon)+" "+str(nlat)+" "+str(nlon)+" "+str(nlat)+" "+grd_lbl+" "+grd_lbl+" LAG=0\n" \
+               +"P 2 P 2\n#\n"
+        file.write(bloc)
+        
+    file.write(" $END")
+    file.close()
+
+    # Replace Header
+    nbex = len(exchanges['rcv']) + len( exchanges['snd'])
+    replacements = {'NBFLD' : str(nbex) , 'NTIME': str()}
+    with open(namcouple) as file:
+        file.seek(0,0)
+        file.write("############# AUTOMATICALLY WRITTEN BY SMART-MORAYS ###############\n")
+        for line in file:
+            for src, target in replacements.items():
+                line = line.replace(src,target).read()
+            file.write(line)
