@@ -13,7 +13,9 @@ logger = logging.getLogger(__name__)
 class Tunnel:
 
     def __init__(self,label="morays"):
+        print("here")
         self.comp = pyoasis.Component(label,True,MPI.COMM_WORLD)
+        print("here 0")
         self.comm_rank = self.comp.localcomm.rank
         self.comm_size = self.comp.localcomm.size
         
@@ -126,7 +128,7 @@ def write_oasis_namelist(tunnel):
 
     # Replace Header
     nbex = len(exchanges['rcv']) + len( exchanges['snd'])
-    replacements = {'NBFLD' : str(nbex) , 'NTIME': str()}
+    replacements = {'NBFLD' : str(nbex) , 'NTIME': str(1000000*freq)}
     with open(namcouple) as file:
         file.seek(0,0)
         file.write("############# AUTOMATICALLY WRITTEN BY SMART-MORAYS ###############\n")

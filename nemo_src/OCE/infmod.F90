@@ -28,8 +28,6 @@ MODULE infmod
    PUBLIC inf_dealloc        ! function called in inferences_final
    PUBLIC inferences_init    ! routine called in nemogcm.F90
    PUBLIC inferences         ! routine called in stpmlf.F90
-   PUBLIC inf_snd            ! routine called in
-   PUBLIC inf_rcv            ! routine called in
    PUBLIC inferences_final   ! routine called in nemogcm.F90
 
    INTEGER, PARAMETER ::   jpgtf2 = 1   ! coupling for 2D GeoTrainFlow
@@ -37,7 +35,7 @@ MODULE infmod
 
    INTEGER, PARAMETER ::   jpinf = 2   ! total number of inferences models
 
-   TYPE( DYNARR ), SAVE, DIMENSION(jpinf) ::  infrcv  ! received inferences
+   TYPE( DYNARR ), SAVE, DIMENSION(jpinf) ::  infsnd, infrcv  ! sent/received inferences
    !
    !!-------------------------------------------------------------------------
    !!                    Namelist for the Inference Models
@@ -64,6 +62,7 @@ CONTAINS
       !
       DO jn = 1, jpinf
          IF( srcv(ntypinf,jn)%laction ) ALLOCATE( infrcv(jn)%z3(jpi,jpj,srcv(ntypinf,jn)%nlvl), STAT=ierr )
+         IF( ssnd(ntypinf,jn)%laction ) ALLOCATE( infsnd(jn)%z3(jpi,jpj,ssnd(ntypinf,jn)%nlvl), STAT=ierr )
          inf_alloc = MAX(ierr,0)
       END DO
       !
@@ -81,6 +80,7 @@ CONTAINS
       !
       DO jn = 1, jpinf
          IF( srcv(ntypinf,jn)%laction ) DEALLOCATE( infrcv(jn)%z3, STAT=ierr )
+         IF( ssnd(ntypinf,jn)%laction ) DEALLOCATE( infsnd(jn)%z3, STAT=ierr )
          inf_dealloc = MAX(ierr,0)
       END DO
       !
@@ -146,18 +146,18 @@ CONTAINS
          ! -------------------------------- !
       
          ! Sea Surface Temp Field <=> Sea Surface Temp Variance
-         ssnd(ntypinf,jpgtf2)%clname = 'O_SST'
+         ssnd(ntypinf,jpgtf2)%clname = 'O_OUT_1'
          ssnd(ntypinf,jpgtf2)%laction = .TRUE.
 
-         srcv(ntypinf,jpgtf2)%clname = 'O_SSTVAR'
+         srcv(ntypinf,jpgtf2)%clname = 'O_IN_1'
          srcv(ntypinf,jpgtf2)%laction = .TRUE.
 
          ! Sea Temp Field <=> Sea Temp Variance
-         ssnd(ntypinf,jpgtf3)%clname = 'O_SVT'
+         ssnd(ntypinf,jpgtf3)%clname = 'O_OUT_2'
          ssnd(ntypinf,jpgtf3)%laction = .TRUE.
          ssnd(ntypinf,jpgtf3)%nlvl = 3 !jpk
 
-         srcv(ntypinf,jpgtf3)%clname = 'O_SVTVAR'
+         srcv(ntypinf,jpgtf3)%clname = 'O_IN_2'
          srcv(ntypinf,jpgtf3)%laction = .TRUE.
          srcv(ntypinf,jpgtf3)%nlvl = 3 !jpk
 
@@ -189,7 +189,7 @@ CONTAINS
       INTEGER, INTENT(in) ::   kt            ! ocean time step
       INTEGER, INTENT(in) ::   Kbb, Kmm, Kaa ! ocean time level indices
       !
-      INTEGER :: isec, info                           ! local integer
+      INTEGER :: isec, info, jn                       ! local integer
       REAL(wp), DIMENSION(jpi,jpj,jpk)   ::  zdata    ! sending buffer
       !!----------------------------------------------------------------------
       !
@@ -198,76 +198,58 @@ CONTAINS
       isec = ( kt - nit000 ) * NINT( rn_Dt )       ! Date of exchange 
       info = OASIS_idle
       !
-      ! ------  Proceed exchanges via OASIS to get inferences ------
+      ! ------  Prepare data to send ------
       !
-      IF( ssnd(ntypinf,jpgtf2)%laction .AND. srcv(ntypinf,jpgtf2)%laction ) THEN 
-         
-         ! Send temperature field
-         zdata(:,:,1:ssnd(ntypinf,jpgtf2)%nlvl) = ts(:,:,1:ssnd(ntypinf,jpgtf2)%nlvl,jp_tem,Kmm)
-         CALL cpl_snd( jpgtf2, isec, ntypinf, zdata, info)
-
-         ! Get inference: temperature variance
-         CALL cpl_rcv( jpgtf2, isec, ntypinf, infrcv(jpgtf2)%z3, info)
+      ! Sea Surface Temperature
+      IF( ssnd(ntypinf,jpgtf2)%laction ) THEN 
+         infsnd(jpgtf2)%z3(:,:,1:ssnd(ntypinf,jpgtf2)%nlvl) = ts(:,:,1:ssnd(ntypinf,jpgtf2)%nlvl,jp_tem,Kmm)
+      ENDIF  
+      !
+      ! Sea Volume Temperature
+      IF( ssnd(ntypinf,jpgtf3)%laction ) THEN 
+         infsnd(jpgtf3)%z3(:,:,1:ssnd(ntypinf,jpgtf3)%nlvl) = ts(:,:,1:ssnd(ntypinf,jpgtf3)%nlvl,jp_tem,Kmm)
+      ENDIF
+      !
+      ! ========================
+      !   Proceed all sendings
+      ! ========================
+      !
+      DO jn = 1, jpinf
+         IF ( ssnd(ntypinf,jn)%laction ) THEN
+            CALL cpl_snd( jn, isec, ntypinf, infsnd(jn)%z3, info)
+         ENDIF
+      END DO
+      !
+      ! .... doing some external operations ....
+      !
+      ! ==========================
+      !   Proceed all receptions
+      ! ==========================
+      !
+      DO jn = 1, jpinf
+         IF( srcv(ntypinf,jn)%laction ) THEN
+            CALL cpl_rcv( jn, isec, ntypinf, infrcv(jn)%z3, info)
+         ENDIF
+      END DO
+      !
+      ! ------ Distribute receptions  ------
+      !
+      ! Sea Surface Temperature Variance
+      IF( srcv(ntypinf,jpgtf2)%laction ) THEN
          sigmaT_2D(:,:) = infrcv(jpgtf2)%z3(:,:,1)
-
-         CALL iom_put( 'inf_sigmaT_2D', sigmaT_2D(:,:) ) ! output 2D temperature variance
+         CALL iom_put( 'inf_sigmaT_2D', sigmaT_2D(:,:) )
       ENDIF
-      !
-      !
-      IF( ssnd(ntypinf,jpgtf3)%laction .AND. srcv(ntypinf,jpgtf3)%laction ) THEN
-
-         ! Send Temperature columns
-         zdata(:,:,1:ssnd(ntypinf,jpgtf3)%nlvl) = ts(:,:,1:ssnd(ntypinf,jpgtf3)%nlvl,jp_tem,Kmm)
-         CALL cpl_snd( jpgtf3, isec, ntypinf, zdata, info) 
-
-         ! Get inference: temprature variance
-         CALL cpl_rcv( jpgtf3, isec, ntypinf, infrcv(jpgtf3)%z3, info)
+      !        
+      ! Sea Volume Temperature Variance
+      IF( srcv(ntypinf,jpgtf3)%laction ) THEN
          sigmaT_3D(:,:,1:srcv(ntypinf,jpgtf3)%nlvl) = infrcv(jpgtf3)%z3(:,:,1:srcv(ntypinf,jpgtf3)%nlvl)
-
-         CALL iom_put( 'inf_sigmaT_3D', sigmaT_3D(:,:,:) ) ! output 3D temperature variance
+         CALL iom_put( 'inf_sigmaT_3D', sigmaT_3D(:,:,:) )
       ENDIF
+      !
       !
       IF( ln_timing )   CALL timing_stop('inferences')
       !
    END SUBROUTINE inferences
-
-
-   SUBROUTINE inf_snd
-      !!----------------------------------------------------------------------
-      !!             ***  ROUTINE inf_snd  ***
-      !!
-      !! ** Purpose :   send the ocean data needed for the trained models
-      !!
-      !! ** Method  :   *  
-      !!                * 
-      !!----------------------------------------------------------------------
-
-      !
-
-      !!----------------------------------------------------------------------
-
-
-      !
-   END SUBROUTINE inf_snd
-
-
-   SUBROUTINE inf_rcv
-      !!----------------------------------------------------------------------
-      !!             ***  ROUTINE inf_rcv  ***
-      !!
-      !! ** Purpose :   update the ocean data with the ML based models
-      !!
-      !! ** Method  :   * Receive all the fields for the models
-      !!                * OASIS ...
-      !!----------------------------------------------------------------------
-
-      !
-
-      !!----------------------------------------------------------------------
-
-
-      !
-   END SUBROUTINE inf_rcv
 
 
    SUBROUTINE inferences_final

@@ -1,7 +1,7 @@
-#import argparse
 from smart_morays.pycpl import open_tunnel, Tunnel
 import smart_morays.inferences as Models
-from smart_morays.loop import init_morays, coupled_run, finish_morays, Freqs
+from smart_morays.loop import init_morays, coupled_run, finish_morays
+import smart_morays.freqs as Freqs
 
 def main():
 
@@ -29,7 +29,7 @@ def main():
                         })
     
     
-    gtf = Models.LTPytorch_Model('GeoTrainFlow')
+    #gtf = Models.LTPytorch_Model('GeoTrainFlow')
 
     #  Run Simulation
     # ++++++++++++++++
@@ -41,7 +41,6 @@ def main():
     niter = int( namelist['namrun']['nn_itend'] - namelist['namrun']['nn_it000'] )
 
     coupled_run(nemo,gtf,time_step,niter)
-    #uncoupled_run(gtf)
 
     #  Terminate
     # +++++++++++

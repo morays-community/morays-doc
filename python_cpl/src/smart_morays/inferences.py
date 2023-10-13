@@ -1,8 +1,7 @@
 import logging
-import pytorch_lightning as lt
+#import pytorch_lightning as lt
 
 logger = logging.getLogger(__name__)
-
 
 class TrainedModel:
 
@@ -12,7 +11,8 @@ class TrainedModel:
     def __del__(self):
         pass
 
-    def load_data
+    def load_data(self):
+        pass
 
     def load_weight(self):
         pass
