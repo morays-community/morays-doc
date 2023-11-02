@@ -28,7 +28,7 @@ Detailed informations about use of Morays and implementation of models with NEMO
 
 Modified NEMO sources. 
 
-- Copy them in the `MY_SRC` directory of a NEMO_v4.2.1 config to run demonstration case. <u>NEMO must be then compiled with deployed OASIS Python API</u> (see this [guide](https://github.com/alexis-barge/morays/blob/main/python_cpl/pyOASIS_NEMO.md)).
+- Copy them in the `MY_SRC` directory of a NEMO_v4.2.1 config to run demonstration case. <u>NEMO must be then compiled with deployed OASIS Python API</u> (see this [guide](https://github.com/alexis-barge/morays/blob/main/docs/pyOASIS_NEMO.md)).
 
 #### Last modifications (under assumption of testing) : 28/10/2023
   * Architecture: OASIS coupling module `cpl_oasis.F90` was initially managed by SBC module
@@ -69,13 +69,12 @@ Inference models and coupling material for demonstration case. Copy them in the 
 
 - **main.py** : Eophis script that deploys models hereunder during coupling
 
-- **models.py** : inference models collection <span style="color:red">
-Work In Progress</span>
-     - `add_100` --- trivially add 100 to a field
-     - `Std_Stanley` --- analytic computation of [*Stanley et al.*(2020)](https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2020MS002185) model
-     - `GTF_LinReg_Stanley` --- *Stanley et al.* with LinReg [GeoTrainFlow](https://github.com/anastasiaGor/geoTrainFlow) inferences
-     - `GTF_FCNN_Stanley` --- *Stanley et al.* with FCNN GeoTrainFlow inferences
-     -`GTF_CNN_Stanley` --- *Stanley et al.* with CNN GeoTrainFlow model
+- **models.py** : inference models collection <span style="color:red">Work In Progress</span>
+    - `add_100` --- trivially add 100 to a field
+    - `Std_Stanley` --- analytic computation of [*Stanley et al.*(2020)](https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2020MS002185) model
+    - `GTF_LinReg_Stanley` --- *Stanley et al.* with LinReg [GeoTrainFlow](https://github.com/anastasiaGor/geoTrainFlow) inferences
+    - `GTF_FCNN_Stanley` --- *Stanley et al.* with FCNN GeoTrainFlow inferences
+    - `GTF_CNN_Stanley` --- *Stanley et al.* with CNN GeoTrainFlow model
 
 
 
