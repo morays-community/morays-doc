@@ -120,13 +120,27 @@ CONTAINS
       !!--------------------------------------------------------------------
       CHARACTER(len = *), INTENT(in   ) ::   cd_modname   ! model name as set in namcouple file
       INTEGER           , INTENT(  out) ::   kl_comm      ! local communicator of the model
+      !
+      LOGICAL                           ::   ld_exist     ! presence of namcouple
+      INTEGER                           ::   kcount       ! counter
       !!--------------------------------------------------------------------
 
       ! WARNING: No write in numout in this routine
       !============================================
 
+      !-------------------------------------------------------------------------------
+      ! 1st Inquire namcouple file - let some time for potential external writing
+      !-------------------------------------------------------------------------------
+      kcount = 0
+      DO WHILE ( kcount < 3 )
+         INQUIRE(FILE='namcouple', EXIST=ld_exist)
+         IF( ld_exist ) EXIT
+         CALL SLEEP(1)
+         kcount = kcount + 1
+      END DO
+
       !------------------------------------------------------------------
-      ! 1st Initialize the OASIS system for the application
+      ! 2nd Initialize the OASIS system for the application
       !------------------------------------------------------------------
       CALL oasis_init_comp ( ncomp_id, TRIM(cd_modname), nerror )
       IF( nerror /= OASIS_Ok ) &
@@ -135,7 +149,6 @@ CONTAINS
       !------------------------------------------------------------------
       ! 3rd Get an MPI communicator for OCE local communication
       !------------------------------------------------------------------
-
       CALL oasis_get_localcomm ( kl_comm, nerror )
       IF( nerror /= OASIS_Ok ) &
          CALL oasis_abort (ncomp_id, 'cpl_init','Failure in oasis_get_localcomm' )

@@ -1,6 +1,5 @@
 # Building directory
-python_cpl/src/smart_morays.egg-info
-python_cpl/src/smart_morays/__pycache__/
+.DS_Store
 
 # Prerequisites
 *.d

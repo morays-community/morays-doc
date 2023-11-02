@@ -1,6 +1,6 @@
 # PyOASIS with NEMO
 
-Quick guide to compile NEMO with OASIS_V5.0 and use the Python API.
+Quick guide to compile NEMO with deployed OASIS_V5.0 (compulsory) Python API.
 
 **WARNING**: This tutorial is done considering NEMO_V4.2.1, which officially does not support OASIS_V5.0.
 
@@ -18,9 +18,9 @@ OASIS needs to be compiled first because both XIOS and NEMO depend on it.
 
 ### Compile Libraries
 
-* OASIS libraries must be dynamically compiled to use C and Python APIs. Create and adapt your own "make.\<YOUR_ARCH\>" file.
+* OASIS libraries must be dynamically compiled to deploy C and Python APIs. Create and adapt your own "make.\<YOUR_ARCH\>" file.
 
-* Define the following flags to ensure dynamic compilation :
+* Make sure to have the following flags to ensure dynamic compilation :
 
     ``` DYNOPT = -fPIC ```
 
@@ -38,29 +38,6 @@ OASIS needs to be compiled first because both XIOS and NEMO depend on it.
 
       libmct.so         libmpeu.so         liboasis.cbind.so         libpsmile.MPI1.so         libscrip.so
 
-## Required Python Environnement
-
-* Source the following files to initialize the PyOASIS modules. The best is to put those commands in your `.bash_profile`:
-
-    ``` source /PATH/TO/oasis3-mct/BLD/python/init.sh ```
-
-    ``` source /PATH/TO/oasis3-mct/BLD/python/init.csh ```
-
-* Some python packages are required to use PyOASIS. Use your favorite python environnment manager to install and load them:
-
-        mpi4py         numpy         netcdf4
-
-* Those are not compulsory but useful to run the tests:
-
-        matplotlib         scipy         shapely         cartopy         pytest
-
-    **NB:** See PyOASIS documentation for more details.
-
-## Testing PyOASIS
-
-* Go in directory `../oasis3-mct/pyoasis/tests` and execute `run_pytest.sh` or directly type `pytest` command to run PyOASIS unit tests.
-
-* If successfull, go in `../oasis3-mct/pyoasis/` and type `make test` to execute the OASIS Fortran, C and Python operating tests.
 
 ## Compile XIOS and NEMO
 
