@@ -1,6 +1,6 @@
 # Morays
 
-**<span style="color:red">M</span>imicking <span style="color:red">O</span>cean <span style="color:red">R</span>elevance with <span style="color:red">A</span>rtificiall<span style="color:red">Y</span> intelligent <span style="color:red">S</span>nakes**
+_**M**imicking **O**cean **R**elevance with **A**rtificiall**Y** **I**ntelligent **S**nakes_
 
 Morays is a project aiming the development of a [NEMO](https://www.nemo-ocean.eu/)  interface with Python written Machine Learning libraries and the supply of material for a demonstrating coupled simulation.
 
@@ -15,20 +15,22 @@ Morays is a project aiming the development of a [NEMO](https://www.nemo-ocean.eu
 - The second main objective is to create a NEMO API to easily implement ocean models that need inferences.
 
 **Demonstration Case**
-<span style="color:red">Work In Progress</span>
+_...WORK IN PROGRESS..._
 - Morays test case simulates a complete year of an eORCA025 config with daily exchanges of Sea Temperature with Eophis in which equation of state is computed with different models. Results are sent back to NEMO and written in an ouput file with XIOS.
 
 ## Docs
 Detailed informations about use of Morays and implementation of models with NEMO inference module interface.
-<span style="color:red">Work In Progress</span>
+
+_...WORK IN PROGRESS..._
 
 ## Nemo Setup
 
 ### src
 
-Modified NEMO sources. 
+Modified NEMO sources:
 
-- Copy them in the `MY_SRC` directory of a NEMO_v4.2.1 config to run demonstration case. <u>NEMO must be then compiled with deployed OASIS Python API</u> (see this [guide](https://github.com/alexis-barge/morays/blob/main/docs/pyOASIS_NEMO.md)).
+- Copy them in the `MY_SRC` directory of a NEMO_v4.2.1 config to run demonstration case. 
+- NEMO must be then compiled with deployed OASIS Python API (see this [guide](https://github.com/alexis-barge/morays/blob/main/docs/pyOASIS_NEMO.md)).
 
 #### Last modifications (under assumption of testing) : 28/10/2023
   * Architecture: OASIS coupling module `cpl_oasis.F90` was initially managed by SBC module
@@ -60,21 +62,22 @@ Modified NEMO sources.
 </table>
 
 ### config
-NEMO simulation material (namelists, XIOS files, launch scripts...) for demonstration case. Copy them in the `EXP00` directory of the NEMO config.
-<span style="color:red">Work In Progress</span>
+NEMO simulation material (namelists, XIOS files, launch scripts...) for demonstration case. Copy them in the `EXP00` directory.
+
+_...WORK IN PROGRESS..._
 
 ## Inferences
 
-Inference models and coupling material for demonstration case. Copy them in the `EXP00` directory of the NEMO config.
+Inference models and coupling material for demonstration case. Copy them in the `EXP00` directory.
 
 - **main.py** : Eophis script that deploys models hereunder during coupling
 
-- **models.py** : inference models collection <span style="color:red">Work In Progress</span>
-    - `add_100` --- trivially add 100 to a field
-    - `Std_Stanley` --- analytic computation of [*Stanley et al.*(2020)](https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2020MS002185) model
-    - `GTF_LinReg_Stanley` --- *Stanley et al.* with LinReg [GeoTrainFlow](https://github.com/anastasiaGor/geoTrainFlow) inferences
-    - `GTF_FCNN_Stanley` --- *Stanley et al.* with FCNN GeoTrainFlow inferences
-    - `GTF_CNN_Stanley` --- *Stanley et al.* with CNN GeoTrainFlow model
+- **models.py** : inference models collection _...WORK IN PROGRESS..._
+   - `add_100` -- trivially add 100 to a field
+   - `Std_Stanley` -- analytic computation of [*Stanley et al.*(2020)](https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2020MS002185) model
+   - `GTF_LinReg_Stanley` -- *Stanley et al.* with LinReg [GeoTrainFlow](https://github.com/anastasiaGor/geoTrainFlow) inferences
+   - `GTF_FCNN_Stanley` -- *Stanley et al.* with FCNN GeoTrainFlow inferences
+   - `GTF_CNN_Stanley` -- *Stanley et al.* with CNN GeoTrainFlow inferences
 
 
 
