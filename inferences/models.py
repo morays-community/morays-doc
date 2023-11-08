@@ -15,7 +15,7 @@ import numpy as np
 def Is_None(*inputs):
     return any(item is None for item in inputs)
 
-def format_out(*outputs)
+def format_out(*outputs):
     return [np.array(out) for out in outputs]
 
 

@@ -4,16 +4,17 @@ from eophis import Freqs, Grids
 # other modules
 import argparse
 import os
-
+from mpi4py import MPI
 
 def ocean_info():
     # coupling config
     tunnel_config = { 'label' : 'TO_NEMO', \
                       'grids' : { 'eORCA05' : Grids.eORCA05, \
-                                  'lmdz' : [180,151,0,0]  }  \
-                      'exchs' : [ {'freq' : Freqs.HOURLY,  'grd' : 'eORCA05', 'lvl' : 1, 'in' : ['sst'], 'out' : ['sst_var'] },  \
-                                  {'freq' : Freqs.DAILY, 'grd' : 'eORCA05', 'lvl' : 3, 'in' : ['svt'], 'out' : ['svt_var'] } ] }
-    # optionnal:      'aliases' : { 'sst' : 'OAS_SST', 'svt' : 'OASTEMP3', 'sst_var' : 'OASSTVAR', 'svt_var' : 'OASTVAR3'} }
+                                  'lmdz' : [180,151,0,0]  }, \
+                      'exchs' : [ {'freq' : Freqs.HOURLY, 'grd' : 'eORCA05', 'lvl' : 1, 'in' : ['sst'], 'out' : ['sst_var'] },  \
+                                  {'freq' : Freqs.DAILY,  'grd' : 'eORCA05', 'lvl' : 3, 'in' : ['svt'], 'out' : ['svt_var'] } ] }
+      # optional      'es_aliases' : { 'sst' : 'OCE_SST', 'svt' : 'OCE_TEMP', 'sst_var' : 'OCE_SSTV', 'svt_var' : 'OCETEMPV'},  \
+      # optional      'im_aliases' : { 'sst' : 'EOP_SST', 'svt' : 'EOP_TEMP', 'sst_var' : 'EOP_SSTV', 'svt_var' : 'EOPTEMPV'}   }
 
     # ocean namelist
     nemo_nml = eophis.FortranNamelist(os.path.join(os.getcwd(),'namelist_cfg'))
@@ -40,17 +41,17 @@ def production():
     eophis.info('========= NEMO-EOPHIS DEMO : Production =========')
     eophis.info('  Aim: execute coupled simulation\n')
 
-    #  Ocean Info
-    # ++++++++++++
+    #  Ocean Coupling
+    # ++++++++++++++++
     tunnel_config, nemo_nml = ocean_info()
     step, it_end, it_0 = nemo_nml.get('rn_Dt','nn_itend','nn_it000')
     niter = it_end - it_0 + 1
     total_time = niter * step
 
     # tunnel registration (lazy)
-    nemo = eophis.register_tunnels( tunnel_config )
-    
-    # link all tunnels (check log, errors will )
+    nemo, = eophis.register_tunnels( tunnel_config )
+
+    # link all tunnels (beware, errors will likely appear here)
     eophis.open_tunnels()
 
     #  Models
@@ -61,7 +62,8 @@ def production():
     # ++++++++++
     @eophis.all_in_all_out(earth_system=nemo, step=step, niter=niter)
     def loop_core(**inputs):
-    
+        outputs = {}
+
         outputs['sst_var'] = add_100(inputs['sst'])
         outputs['svt_var'] = add_100(inputs['svt'])
         #outputs['rho'] = GTF_LinReg_Grooms(inputs['sst'])
@@ -70,7 +72,7 @@ def production():
 
     #  Run
     # +++++
-    start_eophis(loop_core)
+    eophis.start(loop_core)
     
 # ============================ #
 if __name__=='__main__':
