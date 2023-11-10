@@ -78,6 +78,3 @@ Inference models and coupling material for demonstration case. Copy them in the 
    - `GTF_LinReg_Stanley` -- *Stanley et al.* with LinReg [GeoTrainFlow](https://github.com/anastasiaGor/geoTrainFlow) inferences
    - `GTF_FCNN_Stanley` -- *Stanley et al.* with FCNN GeoTrainFlow inferences
    - `GTF_CNN_Stanley` -- *Stanley et al.* with CNN GeoTrainFlow inferences
-
-
-

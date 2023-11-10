@@ -10,7 +10,7 @@ def ocean_info():
     # coupling config
     tunnel_config = { 'label' : 'TO_NEMO', \
                       'grids' : { 'eORCA05' : Grids.eORCA05, \
-                                  'lmdz' : [180,151,0,0]  }, \
+                                  'lmdz' : (180,151,0,0)  }, \
                       'exchs' : [ {'freq' : Freqs.HOURLY, 'grd' : 'eORCA05', 'lvl' : 1, 'in' : ['sst'], 'out' : ['sst_var'] },  \
                                   {'freq' : Freqs.DAILY,  'grd' : 'eORCA05', 'lvl' : 3, 'in' : ['svt'], 'out' : ['svt_var'] } ] }
       # optional      'es_aliases' : { 'sst' : 'OCE_SST', 'svt' : 'OCE_TEMP', 'sst_var' : 'OCE_SSTV', 'svt_var' : 'OCETEMPV'},  \
@@ -22,7 +22,7 @@ def ocean_info():
 
 
 def preproduction():
-    eophis.info('========= NEMO-EOPHIS DEMO : Pre-Production =========')
+    eophis.info('========= MORAYS : Pre-Production =========')
     eophis.info('  Aim: write coupling namelist\n')
 
     # ocean info
@@ -34,11 +34,11 @@ def preproduction():
     eophis.register_tunnels( tunnel_config )
     
     # write updated namelist
-    eophis.write_oasis_namelist( simulation_time=total_time )
+    eophis.write_coupling_namelist( simulation_time=total_time )
 
 
 def production():
-    eophis.info('========= NEMO-EOPHIS DEMO : Production =========')
+    eophis.info('========= MORAYS : Production =========')
     eophis.info('  Aim: execute coupled simulation\n')
 
     #  Ocean Coupling
@@ -51,7 +51,7 @@ def production():
     # tunnel registration (lazy)
     nemo, = eophis.register_tunnels( tunnel_config )
 
-    # link all tunnels (beware, errors will likely appear here)
+    # link all tunnels (beware, dormant errors will likely appear here)
     eophis.open_tunnels()
 
     #  Models
@@ -72,16 +72,18 @@ def production():
 
     #  Run
     # +++++
-    eophis.start(loop_core)
+    eophis.starter(loop_core)
     
 # ============================ #
 if __name__=='__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--exec', dest='exec', type=str, default='prod',help='Execution type: preprod or prod')
+    parser.add_argument('--exec', dest='exec', type=str, default='prod', help='Execution type: preprod or prod')
     args = parser.parse_args()
 
     if args.exec == 'preprod':
         preproduction()
     elif args.exec == 'prod':
         production()
+    else:
+        eophis.abort(f'Unknown execution mode {args.exec}, use "preprod" or "prod"')
