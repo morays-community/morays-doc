@@ -4,7 +4,6 @@ from eophis import Freqs, Grids
 # other modules
 import argparse
 import os
-from mpi4py import MPI
 
 def ocean_info():
     # coupling config
