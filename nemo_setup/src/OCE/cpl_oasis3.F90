@@ -284,7 +284,7 @@ CONTAINS
                      IF( sn_cfctl%l_oasout ) WRITE(numout,*) "Variable defined in the namcouple"
                      isnd = isnd + 1
                   ELSEIF( ssnd(ktyp,ji)%nid(jc,jm) == -1 ) THEN 
-                     WRITE(numout,*) "   "//TRIM(ssnd(ktyp,ji)%clname)//" NOT defined in the namcouple, coupling disabled"
+                     IF(lwp) WRITE(numout,*) "   "//TRIM(ssnd(ktyp,ji)%clname)//" NOT defined in the namcouple, coupling disabled"
                      ssnd(ktyp,ji)%laction = .FALSE.
                   ENDIF
                END DO
@@ -340,7 +340,7 @@ CONTAINS
                      IF( sn_cfctl%l_oasout ) WRITE(numout,*) "Variable defined in the namcouple"
                      ircv = ircv + 1
                   ELSEIF( srcv(ktyp,ji)%nid(jc,jm) == -1 ) THEN 
-                     WRITE(numout,*) "   "//TRIM(srcv(ktyp,ji)%clname)//" NOT defined in the namcouple, coupling disabled"
+                     IF(lwp) WRITE(numout,*) "   "//TRIM(srcv(ktyp,ji)%clname)//" NOT defined in the namcouple, coupling disabled"
                      srcv(ktyp,ji)%laction = .FALSE.
                   ENDIF
                END DO

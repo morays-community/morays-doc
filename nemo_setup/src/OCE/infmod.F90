@@ -30,8 +30,8 @@ MODULE infmod
    PUBLIC inferences         ! routine called in stpmlf.F90
    PUBLIC inferences_final   ! routine called in nemogcm.F90
 
-   INTEGER, PARAMETER ::   jpgtf2 = 1   ! coupling for 2D GeoTrainFlow
-   INTEGER, PARAMETER ::   jpgtf3 = 2   ! coupling for 3D GeoTrainFlow 
+   INTEGER, PARAMETER ::   jps_sst = 1   ! sea surface
+   INTEGER, PARAMETER ::   jps_sss = 2   ! coupling for 3D GeoTrainFlow
 
    INTEGER, PARAMETER ::   jpinf = 2   ! total number of inferences models
 
@@ -145,20 +145,23 @@ CONTAINS
          !      Kenigson et al. (2022)      !
          ! -------------------------------- !
       
-         ! Sea Surface Temp Field <=> Sea Surface Temp Variance
+         ! Sea Surface Temp and Salinity Field <=> rho
          ssnd(ntypinf,jpgtf2)%clname = 'O_OUT_1'
          ssnd(ntypinf,jpgtf2)%laction = .TRUE.
+
+         ssnd(ntypinf,jpgtf3)%clname = 'O_OUT_2'
+         ssnd(ntypinf,jpgtf3)%laction = .TRUE.
 
          srcv(ntypinf,jpgtf2)%clname = 'O_IN_1'
          srcv(ntypinf,jpgtf2)%laction = .TRUE.
 
-         ! Sea Temp Field <=> Sea Temp Variance
-         ssnd(ntypinf,jpgtf3)%clname = 'O_OUT_2'
-         ssnd(ntypinf,jpgtf3)%laction = .TRUE.
+         ! Sea Temperature and Salinity Field <=> rho
+         ssnd(ntypinf,jpgtf3)%clname = 'O_OUT_3'
+         ssnd(ntypinf,jpgtf3)%laction = .FALSE.
          ssnd(ntypinf,jpgtf3)%nlvl = 3 !jpk
 
          srcv(ntypinf,jpgtf3)%clname = 'O_IN_2'
-         srcv(ntypinf,jpgtf3)%laction = .TRUE.
+         srcv(ntypinf,jpgtf3)%laction = .FALSE.
          srcv(ntypinf,jpgtf3)%nlvl = 3 !jpk
 
          ! ------------------------------ !

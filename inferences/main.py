@@ -2,22 +2,21 @@
 import eophis
 from eophis import Freqs, Grids
 # other modules
+import xarray as xr
+import xgcm
 import argparse
 import os
-from mpi4py import MPI
+
 
 def ocean_info():
-    # coupling config
-    tunnel_config = { 'label' : 'TO_NEMO', \
-                      'grids' : { 'eORCA05' : Grids.eORCA05, \
-                                  'lmdz' : (180,151,0,0)  }, \
-                      'exchs' : [ {'freq' : Freqs.HOURLY, 'grd' : 'eORCA05', 'lvl' : 1, 'in' : ['sst'], 'out' : ['sst_var'] },  \
-                                  {'freq' : Freqs.DAILY,  'grd' : 'eORCA05', 'lvl' : 3, 'in' : ['svt'], 'out' : ['svt_var'] } ] }
-      # optional      'es_aliases' : { 'sst' : 'OCE_SST', 'svt' : 'OCE_TEMP', 'sst_var' : 'OCE_SSTV', 'svt_var' : 'OCETEMPV'},  \
-      # optional      'im_aliases' : { 'sst' : 'EOP_SST', 'svt' : 'EOP_TEMP', 'sst_var' : 'EOP_SSTV', 'svt_var' : 'EOPTEMPV'}   }
-
     # ocean namelist
     nemo_nml = eophis.FortranNamelist(os.path.join(os.getcwd(),'namelist_cfg'))
+
+    # coupling config
+    tunnel_config = { 'label' : 'TO_NEMO', \
+                      'grids' : { 'eORCA025' : Grids.eORCA025 }, \
+                      'exchs' : [ {'freq' : Freqs.DAILY, 'grd' : 'eORCA025', 'lvl' : 1, 'in' : ['sst','sss'], 'out' : ['rho']} ] }
+    
     return tunnel_config, nemo_nml
 
 
@@ -56,17 +55,15 @@ def production():
 
     #  Models
     # ++++++++
-    from models import add_100, Std_Stanley, GTF_LinReg_Stanley, GTF_FCNN_Stanley, GTF_CNN_Stanley
+    from models import Std_Stanley, GTF_LinReg_Stanley, GTF_FCNN_Stanley, GTF_CNN_Stanley
 
     #  Assemble
     # ++++++++++
     @eophis.all_in_all_out(earth_system=nemo, step=step, niter=niter)
     def loop_core(**inputs):
         outputs = {}
-
-        outputs['sst_var'] = add_100(inputs['sst'])
-        outputs['svt_var'] = add_100(inputs['svt'])
-        #outputs['rho'] = GTF_LinReg_Grooms(inputs['sst'])
+        
+        outputs['rho'] = Std_Stanley( T=inputs['sst'], S=inputs['sss'] )
         
         return outputs
 
