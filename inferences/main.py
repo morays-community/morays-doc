@@ -2,11 +2,8 @@
 import eophis
 from eophis import Freqs, Grids
 # other modules
-import xarray as xr
-import xgcm
 import argparse
 import os
-
 
 def ocean_info():
     # ocean namelist

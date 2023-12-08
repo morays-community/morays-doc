@@ -145,30 +145,27 @@ CONTAINS
          !      Kenigson et al. (2022)      !
          ! -------------------------------- !
       
-         ! Sea Surface Temp and Salinity Field <=> rho
-         ssnd(ntypinf,jpgtf2)%clname = 'O_OUT_1'
+         ! Sea Surface Temp Field <=> Sea Surface Temp Variance
+         ssnd(ntypinf,jpgtf2)%clname = 'E_OUT_0'
          ssnd(ntypinf,jpgtf2)%laction = .TRUE.
 
-         ssnd(ntypinf,jpgtf3)%clname = 'O_OUT_2'
-         ssnd(ntypinf,jpgtf3)%laction = .TRUE.
-
-         srcv(ntypinf,jpgtf2)%clname = 'O_IN_1'
+         srcv(ntypinf,jpgtf2)%clname = 'E_IN_0'
          srcv(ntypinf,jpgtf2)%laction = .TRUE.
 
-         ! Sea Temperature and Salinity Field <=> rho
-         ssnd(ntypinf,jpgtf3)%clname = 'O_OUT_3'
-         ssnd(ntypinf,jpgtf3)%laction = .FALSE.
+         ! Sea Temp Field <=> Sea Temp Variance
+         ssnd(ntypinf,jpgtf3)%clname = 'E_OUT_1'
+         ssnd(ntypinf,jpgtf3)%laction = .TRUE.
          ssnd(ntypinf,jpgtf3)%nlvl = 3 !jpk
 
-         srcv(ntypinf,jpgtf3)%clname = 'O_IN_2'
-         srcv(ntypinf,jpgtf3)%laction = .FALSE.
+         srcv(ntypinf,jpgtf3)%clname = 'E_IN_1'
+         srcv(ntypinf,jpgtf3)%laction = .TRUE.
          srcv(ntypinf,jpgtf3)%nlvl = 3 !jpk
 
          ! ------------------------------ !
          ! ------------------------------ !
 
       END IF
-
+      ! 
       ! ================================= !
       !   Define variables for coupling
       ! ================================= !

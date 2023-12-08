@@ -48,6 +48,16 @@ MODULE cpl_oasis3
    PUBLIC   cpl_freq
    PUBLIC   cpl_finalize
 
+#if ! defined key_oasis3
+   INTERFACE oasis_get
+      MODULE PROCEDURE oasis_get_2D, oasis_get_3D
+   END INTERFACE
+
+   INTERFACE oasis_put
+      MODULE PROCEDURE oasis_put_2D, oasis_put_3D
+   END INTERFACE
+#endif
+
    INTEGER, PUBLIC            ::   OASIS_Rcv  = 1    !: return code if received field
    INTEGER, PUBLIC            ::   OASIS_idle = 0    !: return code if nothing done by oasis
    INTEGER                    ::   ncomp_id          ! id returned by oasis_init_comp
@@ -657,21 +667,37 @@ CONTAINS
       WRITE(numout,*) 'oasis_enddef: Error you sould not be there...'
    END SUBROUTINE oasis_enddef
 
-   SUBROUTINE oasis_put(k1,k2,p1,k3)
+   SUBROUTINE oasis_put_2D(k1,k2,p1,k3)
       REAL(wp), DIMENSION(:,:), INTENT(in   ) ::  p1
       INTEGER                 , INTENT(in   ) ::  k1,k2
       INTEGER                 , INTENT(  out) ::  k3
       k3 = -1
       WRITE(numout,*) 'oasis_put: Error you sould not be there...'
-   END SUBROUTINE oasis_put
+   END SUBROUTINE oasis_put_2D
 
-   SUBROUTINE oasis_get(k1,k2,p1,k3)
+   SUBROUTINE oasis_put_3D(k1,k2,p1,k3)
+      REAL(wp), DIMENSION(:,:,:), INTENT(in   ) ::  p1
+      INTEGER                   , INTENT(in   ) ::  k1,k2
+      INTEGER                   , INTENT(  out) ::  k3
+      k3 = -1
+      WRITE(numout,*) 'oasis_put: Error you sould not be there...'
+   END SUBROUTINE oasis_put_3D
+
+   SUBROUTINE oasis_get_2D(k1,k2,p1,k3)
       REAL(wp), DIMENSION(:,:), INTENT(  out) ::  p1
       INTEGER                 , INTENT(in   ) ::  k1,k2
       INTEGER                 , INTENT(  out) ::  k3
       p1(1,1) = -1. ; k3 = -1
       WRITE(numout,*) 'oasis_get: Error you sould not be there...'
-   END SUBROUTINE oasis_get
+   END SUBROUTINE oasis_get_2D
+
+   SUBROUTINE oasis_get_3D(k1,k2,p1,k3)
+      REAL(wp), DIMENSION(:,:,:), INTENT(  out) ::  p1
+      INTEGER                   , INTENT(in   ) ::  k1,k2
+      INTEGER                   , INTENT(  out) ::  k3
+      p1(1,1,1) = -1. ; k3 = -1
+      WRITE(numout,*) 'oasis_get: Error you sould not be there...'
+   END SUBROUTINE oasis_get_3D
 
    SUBROUTINE oasis_get_freqs(k1,k5,k2,k3,k4)
       INTEGER              , INTENT(in   ) ::  k1,k2
