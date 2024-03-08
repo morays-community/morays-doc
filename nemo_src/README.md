@@ -1,6 +1,6 @@
 # Nemo Sources
 
-Modified NEMO sources:
+Modified [NEMO v4.2.1](https://forge.nemo-ocean.eu/nemo/nemo/-/releases/4.2.1) sources:
 
 - Copy them in the `MY_SRC` directory of a NEMO config
 - NEMO must be then compiled with deployed OASIS Python API (see this [guide](https://github.com/alexis-barge/morays/blob/main/docs/pyOASIS_NEMO.md)).
