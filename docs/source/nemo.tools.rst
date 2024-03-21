@@ -1,5 +1,5 @@
-Advanced NEMO-Eophis
-====================
+Advanced NEMO-Eophis coupling
+=============================
 
 Production tools
 ----------------

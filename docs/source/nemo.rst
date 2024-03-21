@@ -7,4 +7,4 @@ Deploy a Python model within NEMO
 
     NEMO Interface <nemo.api>
     Eophis for NEMO <nemo.eophis>
-    Advanced NEMO-Eophis <nemo.tools>
+    Advanced NEMO-Eophis coupling <nemo.tools>
