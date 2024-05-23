@@ -20,4 +20,5 @@ Contents:
 
    Overview <overview>
    Getting started <getting_started>
-   Deploy a Python model within NEMO <nemo>
+   Deploy a ML model within NEMO <nemo>
+   Morays collections <morays_exp>

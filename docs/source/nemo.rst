@@ -1,5 +1,5 @@
-Deploy a Python model within NEMO
-=================================
+Deploy a ML model within NEMO
+=============================
 
 
 .. toctree::
