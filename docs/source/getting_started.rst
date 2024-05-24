@@ -224,7 +224,7 @@ We transfer now the Morays sources to our custom test case. Only the sources of 
     # Copy Morays sources
     cp ~/morays-docs/nemo_src/OCE/*   ~/nemo_v4.2.1/tests/DINO_GZ21/MY_SRC/
 
-.. warning:: This step is expected to be a temporary solution until Morays sources will be merged into a future official NEMO release.
+.. warning:: Morays sources are compatible with NEMO_v4.2.1 only for now. This is expected to be a temporary solution until Morays sources will be merged into a future official NEMO release. Now if you dare, you can still try to adapt them for a use with a more recent NEMO version.
 
 
 Experiment patch
