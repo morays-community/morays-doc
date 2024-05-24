@@ -377,6 +377,7 @@ POST-PROCESS directory contains material and/or scripts to compute and plot resu
 
 If everything went good, we should have similar figures than those stored in RES.
 
+As described in the introduction, NEMO only sends the surface velocities towards GZ21 model. However, the implementation allows to send the whole 3D grid if you wish. Just adapt the value of ``nn_lvl`` in the NEMO namelist.
 
 
 
