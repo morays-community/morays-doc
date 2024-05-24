@@ -388,13 +388,11 @@ From now on, you have an useable deployed Morays experiment. Do not hesitate to 
 
 Here are the locations where you can play with:
     - coupling: ``infmod.f90`` for NEMO side, ``main.py`` for Python side and global settings
-    - fields to exchange: ``infmod.f90`` and ``inffld.f90``
+    - fields to exchange: ``stpmlf.f90`` and ``infmod.f90``
     - computation of forcing fields: ``ml_models.py``
-    - use of forcing fields: ``infmod.f90`` and any NEMO sources
+    - use of forcing fields: ``infmod.f90`` and any module that imports ``inffld.f90``
     - NEMO settings: namelists and xml files
 
  
 Next chapters of this documentation provide more details on how to configure the NEMO external communication module. Also check out `Eophis documentation <https://eophis.readthedocs.io/en/latest/>`_ to learn more about ``main.py`` configuration.
-
-
 
