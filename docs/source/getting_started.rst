@@ -122,12 +122,12 @@ Compilation of XIOS with OASIS_v5.0 dynamic libraries follows the same procedure
 2. Experiment environment
 -------------------------
 
-Let's take a look in the `Morays collection <https://github.com/orgs/morays-community/repositories>`_. Repositories are named with a simple convention: ``<OCEAN_CODE>-<EXPERIMENT>``. The corresponding repository for the tutorial is then ``NEMO-DINO``. We clone it:
+Let's take a look in the `Morays collection <https://github.com/orgs/morays-community/repositories>`_. Repositories are named with a simple convention: ``<OCEAN_CODE>-<EXPERIMENT>``. The corresponding repository for the tutorial is then ``NEMO-DINO``. We clone the tutorial branch:
 
 .. code-block:: bash
 
     cd ~/
-    git clone https://github.com/morays-community/NEMO-DINO.git
+    git clone -b morays_tuto https://github.com/morays-community/NEMO-DINO.git
 
 The repository contains a ``README`` with informations about experiment context and its variations.
 
@@ -275,11 +275,18 @@ Script ``job.ksh`` assumes that NEMO will run on a HPC system via a SBATCH sched
 5. INFERENCES - Python material
 -------------------------------
 
-This directory contains all the Python scripts for the hybrid modeling. ``gz21_ocean_momentum`` directory is a git submodule that contains the GZ21 model package. The latter is imported and used in accordance with the experiment objectives in ``ml_models.py``. Finally, ``main.py`` contains the Eophis instructions to couple ``ml_models.py`` with NEMO. Let's copy them to complete the test case:
+This directory contains all the Python scripts for the hybrid modeling. ``gz21_ocean_momentum`` directory is a git submodule that contains the GZ21 model package. The latter is imported and used in accordance with the experiment objectives in ``ml_models.py``. Finally, ``main.py`` contains the Eophis instructions to couple ``ml_models.py`` with NEMO.  Let's copy them to the test case:
 
 .. code-block:: bash
 
     cp ~/NEMO-DINO/DINO.GZ21/INFERENCES/*.py   ~/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
+    
+    
+Model weights are in the folder of the same name. For this tutorial, we will use those:
+    
+.. code-block:: bash
+
+    cp ~/NEMO-DINO/DINO.GZ21/INFERENCES/weights/gz21_huggingface/low-resolution/files/trained_model.pth   ~/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
 
 
 As a git submodule, ``gz21_ocean_momentum`` must be initialized or it will stay empty:
@@ -306,7 +313,7 @@ GZ21 model may be tested by running ``ml_models.py`` as a standalone script:
     python3 ./ml_models.py
     # Should print "Test successful"
         
-    
+
     
 
 6. Running the experiment
