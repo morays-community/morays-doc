@@ -19,7 +19,7 @@ Prerequisites to the turorial:
 Introduction
 ------------
 
-DINO stands for `diabatic Neverworld2 <https://gmd.copernicus.org/articles/15/6567/2022/>`_ . It's a refined regional configuration that aims to capture essential pole-to-pole ocean dynamics for mesoscale turbulence study.
+DINO stands for `diabatic Neverworld2 <https://gmd.copernicus.org/articles/15/6567/2022/>`_ . It's an idealized configuration that aims to capture essential pole-to-pole ocean dynamics for mesoscale turbulence study.
 
 The work of GZ21 takes place in the context of parameterizing the ocean subgrid momentum forcing with a ML model. The goal is to predict the mean and standard deviation of a Gaussian probability distribution at each grid cell. Those are intended to be used for a stochastic prediction of the subgrid forcing. We wish to use the GZ21 parameterization to enhance the solution of a DINO simulation. The model relies on a CNN that takes macroscale surface velocities as inputs and returns mean and deviation as outputs.
 
@@ -359,7 +359,7 @@ If run is going well, Eophis log should contain messages like these:
        Sending back u_f, v_f through tunnel TO_NEMO_FIELDS
 
 
-This means that the exchanges are well performed. Check out also that output files ``NEVERWORLD_gridUsurf.nc`` and ``NEVERWORLD_gridVsurf.nc`` have been created. They contain the subgrid forcing fields computed by GZ21 model.
+This means that the exchanges are well performed. Check out also that output files ``NEVERWORLD.1d_gridUsurf.nc`` and ``NEVERWORLD.1d_gridVsurf.nc`` have been created. They contain the subgrid forcing fields computed by GZ21 model.
 
 
 
@@ -382,7 +382,7 @@ POST-PROCESS directory contains material and/or scripts to compute and plot resu
     python3 ./plots_res.py
 
 
-If everything went good, we should have similar figures than those stored in RES.
+If everything went good, we should have similar figures than those stored in RES. Same plots for a standard DINO config without GZ21 model are also stored for comparison.
 
 As described in the introduction, NEMO only sends the surface velocities towards GZ21 model. However, the implementation allows to send the whole 3D grid if you wish. Just adapt the value of ``nn_lvl`` in the NEMO namelist.
 
