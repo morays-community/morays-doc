@@ -392,7 +392,7 @@ As described in the introduction, NEMO only sends the surface velocities towards
 Going further
 -------------
 
-From now on, you have an useable deployed Morays experiment. Do not hesitate to check out and deploy other test cases to get inspired.
+From now on, you have an useable deployed Morays experiment. Do not hesitate to check out and deploy other test cases to get inspired. For example, a more advanced realization of DINO.GZ21 is available on the main branch of the tutorial repository.
 
 Here are the locations where you can play with:
     - coupling: ``infmod.f90`` for NEMO side, ``main.py`` for Python side and global settings
