@@ -3,7 +3,8 @@ Deploy a ML model within NEMO
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-    NEMO for Morays <nemo.api>
+    NEMO4 for Morays <nemo.api_4>
+    NEMO5 for Morays <nemo.api_5>
     Advanced NEMO-Eophis coupling <nemo.tools>
