@@ -362,6 +362,8 @@ If run is going well, Eophis log should contain messages like these:
 This means that the exchanges are well performed. Check out also that output files ``NEVERWORLD.1d_gridUsurf.nc`` and ``NEVERWORLD.1d_gridVsurf.nc`` have been created. They contain the subgrid forcing fields computed by GZ21 model.
 
 
+.. note:: If your computing environment is able to give you an access to a CUDA-compatible GPU, ``ml_models.py`` will automatically transfer the prediction execution on the GPU while NEMO and Eophis will still be executed on CPUs.
+
 
 
 7. POST-PROCESS and RES
@@ -397,7 +399,7 @@ From now on, you have an useable deployed Morays experiment. Do not hesitate to 
 Here are the locations where you can play with:
     - coupling: ``infmod.f90`` for NEMO side, ``main.py`` for Python side and global settings
     - fields to exchange: ``stpmlf.f90`` and ``infmod.f90``
-    - computation of forcing fields: ``ml_models.py``
+    - computation of forcing fields and ML model configuration: ``ml_models.py``
     - use of forcing fields: ``infmod.f90`` and any module that imports ``inffld.f90``
     - NEMO settings: namelists and xml files
 
