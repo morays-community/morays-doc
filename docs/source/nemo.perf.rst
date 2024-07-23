@@ -31,7 +31,7 @@ This figure shows the number of Simulated Year Per Day (SYPD). Without surprises
 Time costs
 ----------
  
-This figure shows the average percentage of a NEMO iteration taken by different coupling steps. Here, "NEMO" refers to the time during which NEMO waits for the Python script results, "Preds" is the time taken by the Python script to run the coupled model, and "Comm" refers to the time taken by OASIS to perform the exchanges.
+This figure shows the average percentage of a NEMO iteration taken by different steps. Here, "NEMO" refers to the time taken by NEMO routines without coupling, "Python" is the time taken by the Python script to run the coupled model, and "OASIS" refers to the time taken by OASIS to perform the exchanges.
    
    
 .. image:: images/time_eORCA025.L75.png
