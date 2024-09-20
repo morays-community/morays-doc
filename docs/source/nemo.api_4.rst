@@ -26,12 +26,12 @@ Modified OASIS interface
 Current NEMO4 releases do contain an OASIS module. However, it is encapsulated in the SBC module for coupled simulations with atmosphere models and cannot be used for other coupling purposes. Modifications of the NEMO4 sources are then required.
 
 
-Morays sources contain the abovementionned modifications of the NEMO4 code to create a flexible external communication module based on OASIS. Sources and details about modifications are available `here <https://github.com/morays-community/morays-doc/tree/main/nemo_src>`_. You just need to copy them in the ``MY_SRC`` directory of a NEMO4 config.
+Morays patches contain the abovementionned modifications of the NEMO4 code to create a flexible external communication module based on OASIS. Sources contained in patches and details about modifications are available `here <https://github.com/morays-community/morays-doc/tree/main/nemo_src>`_. You just need to copy them in the ``MY_SRC`` directory of a NEMO4 config. 
 
 
 In one word, OASIS module is now independent and can be called by any other module to define coupling variables, send and receive them on demand. Exchange of 3D fields is now possible.
 
-.. warning:: Morays sources are compatible with NEMO_v4.2.1 only. This is expected to be a temporary solution until they are merged into future official NEMO releases.
+.. warning:: Different patches for different NEMO4 versions are available. This is expected to be a temporary solution until they are merged into future official NEMO releases.
 
 
 
