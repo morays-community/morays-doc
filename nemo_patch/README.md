@@ -1,9 +1,12 @@
-# Nemo Sources
+# Nemo Patches
 
-Modified [NEMO v4.2.1](https://forge.nemo-ocean.eu/nemo/nemo/-/releases/4.2.1) sources:
+- Modified NEMO sources for:
+	- [v4.2.0](https://forge.nemo-ocean.eu/nemo/nemo/-/releases/4.2.0)
+	- [v4.2.1](https://forge.nemo-ocean.eu/nemo/nemo/-/releases/4.2.1)
+	- [v4.2.2](https://forge.nemo-ocean.eu/nemo/nemo/-/releases/4.2.2)
 
 - Copy them in the `MY_SRC` directory of a NEMO config
-- NEMO must be then compiled with deployed OASIS Python API (see this [guide](https://github.com/alexis-barge/morays/blob/main/docs/pyOASIS_NEMO.md)).
+- NEMO must be then compiled with *key_oasis3* CCP key (see this [guide](https://morays-doc.readthedocs.io/en/latest/nemo.html)).
 
 
 ### Last modifications (under assumption of testing):

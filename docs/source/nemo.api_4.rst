@@ -18,6 +18,7 @@ The main idea is to deploy the OASIS interface in the Python side and write the 
 What remains now is to configure the OASIS interface in the NEMO communication module in accordance with the global OASIS settings deployed by Eophis.
 
 
+.. note:: NEMO must be compiled with CPP key *key_oasis3* to use OASIS
 
 
 Modified OASIS interface
@@ -30,6 +31,7 @@ Morays patches contain the abovementionned modifications of the NEMO4 code to cr
 
 
 In one word, OASIS module is now independent and can be called by any other module to define coupling variables, send and receive them on demand. Exchange of 3D fields is now possible.
+
 
 .. warning:: Different patches for different NEMO4 versions are available. This is expected to be a temporary solution until they are merged into future official NEMO releases.
 

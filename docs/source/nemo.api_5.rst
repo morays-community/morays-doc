@@ -11,7 +11,7 @@ Section **NEMO4 for Morays** explains that NEMO needs modifications from Morays 
 
 Thus, as for NEMO4, this section contains guidelines to use the modified OASIS interface in a new NEMO5 module. A ready-to-use communication module is still provided and presented with a user guide.
 
-
+.. note:: NEMO must be compiled with CPP key *key_oasis3* to use OASIS
 
 
 Developper\'s guide
