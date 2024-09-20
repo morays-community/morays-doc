@@ -1,6 +1,7 @@
 # Nemo Patches
 
 - Modified NEMO sources for:
+	- [v4.0.7](https://forge.ipsl.fr/nemo/browser/NEMO/releases/r4.0/r4.0.7)
 	- [v4.2.0](https://forge.nemo-ocean.eu/nemo/nemo/-/releases/4.2.0)
 	- [v4.2.1](https://forge.nemo-ocean.eu/nemo/nemo/-/releases/4.2.1)
 	- [v4.2.2](https://forge.nemo-ocean.eu/nemo/nemo/-/releases/4.2.2)
