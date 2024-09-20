@@ -9,7 +9,7 @@
 - NEMO must be then compiled with *key_oasis3* CCP key (see this [guide](https://morays-doc.readthedocs.io/en/latest/nemo.html)).
 
 
-### Last modifications (under assumption of testing):
+### Modifications:
   * Architecture: OASIS coupling module `cpl_oasis.F90` was initially managed by SBC module
       - OASIS environnement is now totally managed by NEMO main routines in `nemogcm.F90`
       - Coupling module is independent and can be called by any other module to define coupling variables, send and receive them on demand

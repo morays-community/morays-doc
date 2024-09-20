@@ -18,7 +18,7 @@ The main idea is to deploy the OASIS interface in the Python side and write the 
 What remains now is to configure the OASIS interface in the NEMO communication module in accordance with the global OASIS settings deployed by Eophis.
 
 
-.. note:: NEMO must be compiled with CPP key *key_oasis3* to use OASIS
+.. note:: NEMO must be compiled with *key_oasis3* CPP key and OASIS_v5.0 (see this `guide <https://morays-doc.readthedocs.io/en/latest/getting_started.html#base-environment>`_).
 
 
 Modified OASIS interface
@@ -27,7 +27,7 @@ Modified OASIS interface
 Current NEMO4 releases do contain an OASIS module. However, it is encapsulated in the SBC module for coupled simulations with atmosphere models and cannot be used for other coupling purposes. Modifications of the NEMO4 sources are then required.
 
 
-Morays patches contain the abovementionned modifications of the NEMO4 code to create a flexible external communication module based on OASIS. Sources contained in patches and details about modifications are available `here <https://github.com/morays-community/morays-doc/tree/main/nemo_src>`_. You just need to copy them in the ``MY_SRC`` directory of a NEMO4 config. 
+Morays patches contain the abovementionned modifications of the NEMO4 code to create a flexible external communication module based on OASIS. Sources contained in patches and details about modifications are available `here <https://github.com/morays-community/morays-doc/tree/main/nemo_patch>`_. You just need to copy them in the ``MY_SRC`` directory of a NEMO4 config.
 
 
 In one word, OASIS module is now independent and can be called by any other module to define coupling variables, send and receive them on demand. Exchange of 3D fields is now possible.
@@ -361,4 +361,4 @@ All sendings and receptions are then performed, in that order. Received fields a
 
 Note that the received fields are directly added to the NEMO RHS that is passed as argument. This means that ``inferences()`` must be called at the right moment of the time integration. Here, it is done in ``stpmlf.F90``.
 
-.. note:: This communication module works fine but is a bit clumsy to our taste. It is planned for future work to propose a finer one with the Morays sources.
+.. note:: This communication module works fine but is a bit clumsy to our taste. It is planned for future work to propose a finer one with the Morays patches.

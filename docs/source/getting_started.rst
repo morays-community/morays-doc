@@ -222,9 +222,9 @@ We transfer now the Morays sources to our custom test case. Only the sources of 
 .. code-block:: bash
 
     # Copy Morays sources
-    cp ~/morays-docs/nemo_src/NEMO_v4.2.1/OCE/*   ~/nemo_v4.2.1/tests/DINO_GZ21/MY_SRC/
+    cp ~/morays-docs/nemo_patch/NEMO_v4.2.1/OCE/*   ~/nemo_v4.2.1/tests/DINO_GZ21/MY_SRC/
 
-.. warning:: Note that patches for other NEMO releases are also available. Be careful to chose the one corresponding to the NEMO version specified in software requirements.
+Note that patches for other NEMO releases are also available.
 
 
 

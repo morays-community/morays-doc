@@ -7,11 +7,11 @@ NEMO5 for Morays
 .. warning:: This section is likely to change regularly since NEMO5 is still in beta testing phase.
 
 
-Section **NEMO4 for Morays** explains that NEMO needs modifications from Morays patch to create an external communication module based on OASIS. This patch is not required in NEMO5 since it has been integrated with the release. However, the integrated modifications are slightly different compared to the Morays patch due to compatibility requirements with NEMO5 features.
+Section **NEMO4 for Morays** explains that NEMO needs modifications from a Morays patch to create an external communication module based on OASIS. Patch is not required in NEMO5 since it has been integrated with the release. However, the integrated modifications are slightly different compared to the Morays patch for NEMO4.
 
-Thus, as for NEMO4, this section contains guidelines to use the modified OASIS interface in a new NEMO5 module. A ready-to-use communication module is still provided and presented with a user guide.
+Thus, this section contains guidelines to use the modified OASIS interface in a new NEMO5 module. A ready-to-use communication module is still provided and presented with a user guide.
 
-.. note:: NEMO must be compiled with CPP key *key_oasis3* to use OASIS
+.. note:: NEMO must be compiled with *key_oasis3* CPP key and OASIS_v5.0 (see this `guide <https://morays-doc.readthedocs.io/en/latest/getting_started.html#base-environment>`_).
 
 
 Developper\'s guide
@@ -356,4 +356,4 @@ All sendings and receptions are then performed, in that order. Received fields a
 
 Note that the received fields are directly added to the NEMO RHS that is passed as argument. This means that ``ext_comm()`` must be called at the right moment of the time integration. Here, it is done in ``stpmlf.F90``.
 
-.. note:: This communication module works fine but is a bit clumsy to our taste. It is planned for future work to propose a finer one with the Morays sources.
+.. note:: This communication module works fine but is a bit clumsy to our taste. It is planned for future work to propose a finer one with the Morays patches.
