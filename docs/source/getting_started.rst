@@ -214,17 +214,16 @@ Morays patch
 .. code-block:: bash
 
     cd ~/
-    git clone https://github.com/morays-community/morays-doc.git
+    git clone https://github.com/morays-community/Patches-NEMO.git
 
 
-We transfer now the Morays sources to our custom test case. Only the sources of the OCE module are needed:
+We transfer now the Morays sources for NEMO_v4.2.1 to our custom test case. Only the sources of the OCE module are needed:
 
 .. code-block:: bash
 
     # Copy Morays sources
-    cp ~/morays-docs/nemo_patch/NEMO_v4.2.1/OCE/*   ~/nemo_v4.2.1/tests/DINO_GZ21/MY_SRC/
+    cp ~/Patches-NEMO/NEMO_v4.2.1/OCE/*   ~/nemo_v4.2.1/tests/DINO_GZ21/MY_SRC/
 
-Note that patches for other NEMO releases are also available.
 
 
 
