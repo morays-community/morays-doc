@@ -19,6 +19,7 @@ Contents:
    :maxdepth: 2
 
    Overview <overview>
+   Morays License <license>
    Getting started <getting_started>
    Deploy a ML model within NEMO <nemo>
    Morays collections <morays_exp>
