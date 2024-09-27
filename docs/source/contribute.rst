@@ -35,7 +35,7 @@ Choose the template corresponding to the code with which you performed your test
 Note that the repository contains a ``README`` and pre-defined directories.
 
 
-2. Inform about environemnt
+2. Inform about environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``README`` file of the repository is here to give informations on the scientific and software environments. Simply follow the instructions given in the ``README`` to fill it.
@@ -48,7 +48,7 @@ Software requirements may be sorted in four categories:
     - **Run:** submission tools to manage the experiment execution
     - **Post-Process:** post-processing libraries and plotting tools
 
-Do no hesitate to add more requirements if necessary.
+Do no hesitate to add more requirements if necessary. Note that the repository should be associated with a doi on zenodo for citations (see `here <https://docs.github.com/en/repositories/archiving-a-github-repository/referencing-and-citing-content>`_).
 
 
 3. Fill experiment directory
@@ -65,8 +65,8 @@ The experiment itself is stored in the main directory of the repository. You can
 Feel free to get inspired from already existing experiments.
 
 
-Create a variation
-------------------
+Experiment variation
+--------------------
 
 A variation of an experiment is another experiment that shares the same software and scientific environments. The variation is stored in the same repository, but in a new main directory. Naming convention of the new directory is: ``<EXPERIMENT>.<VARIATION>``
 
