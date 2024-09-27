@@ -23,3 +23,4 @@ Contents:
    Getting started <getting_started>
    Deploy a ML model within NEMO <nemo>
    Morays collections <morays_exp>
+   Contribute <contribute>
