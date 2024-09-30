@@ -4,51 +4,31 @@ NEMO4 for Morays
 .. toctree::
    :maxdepth: 2
 
-Let's recall that a Morays experiment is an ocean simulation that exchanges fields with an external ML Python script through OASIS. The presented examples rely on the DINO.GZ21 test case available in the Morays collection. Purposes and behaviors of DINO.GZ21 are described in the **Getting Started** section of this documentation. Let's resume what both entities are exchanging.
+Let's recall that a Morays experiment is an ocean simulation that exchanges fields with an external Python script through OASIS. The strategy is to deploy the OASIS interface in the Python side and configure the global coupling environment with help of the Eophis library.
 
-NEMO intends to send:
-    - two time-evolving velocity fields ``u`` and ``v`` at a ``2700s`` frequency, on grid ``(62,199)``
-    - two fixed metric fields ``mask_u`` and ``mask_v`` on the same grid
-and to receive from GZ21 model:
-    - two forcing fields ``u_f`` and ``v_f`` with the same dimensions
+From this point, we consider that all the Python material is already well configured. See `Eophis documentation <https://eophis.readthedocs.io/en/latest/>`_ or this `upcoming tutorial` for more details. What remains now is to configure the OASIS interface of NEMO in accordance with Eophis. This is described in this section.
 
-
-The main idea is to deploy the OASIS interface in the Python side and write the OASIS namelist with help of the Eophis library. From this point, we will consider that all the Python material is well configured in accordance with this description. Check out ``main.py`` content with `Eophis documentation <https://eophis.readthedocs.io/en/latest/>`_.
-
-What remains now is to configure the OASIS interface in the NEMO communication module in accordance with the global OASIS settings deployed by Eophis.
-
-
-.. note:: NEMO must be compiled with *key_oasis3* CPP key and OASIS_v5.0 (see this `guide <https://morays-doc.readthedocs.io/en/latest/getting_started.html#base-environment>`_).
 
 
 Modified OASIS interface
 ------------------------
 
-Current NEMO4 releases do contain an OASIS module. However, it is encapsulated in the SBC module for coupled simulations with atmosphere models and cannot be used for other coupling purposes. Modifications of the NEMO4 sources are then required.
+Current NEMO4 releases do include an OASIS module. However, it is restricted for coupling NEMO with atmospheric models only. Modifications of the NEMO4 sources are required to make it usable for other coupling purposes.
 
-
-Morays patches contain the abovementionned modifications of the NEMO4 code to create a flexible external communication module based on OASIS. Sources contained in patches and details about modifications are available `here <https://github.com/morays-community/Patches-NEMO/blob/main/README.md>`_. You just need to copy them in the ``MY_SRC`` directory of a NEMO4 config.
-
-
-In one word, OASIS module is now independent and can be called by any other module to define coupling variables, send and receive them on demand. Exchange of 3D fields is now possible.
-
-
+Morays provides `patches <https://github.com/morays-community/Patches-NEMO/>`_ with the abovementionned modifications of the NEMO code. More details about modifications are available `here <https://github.com/morays-community/Patches-NEMO/blob/main/README.md>`_. As a user, you just need to copy them in the ``MY_SRC`` directory of a NEMO4 config.
 
 
 
 Developper\'s guide
 ~~~~~~~~~~~~~~~~~~~
 
-We describe here how to use the modified OASIS interface in a new NEMO4 module. Note that modules ``sbccpl.F90`` and ``sbcmod.F90`` provided by Morays sources have been adapted in accordance with the instructions below.
-
-.. note:: A ready-to-use communication module is provided by Morays sources, see next subsection to learn how to use it.
-
+We describe here how to use the OASIS interface in a new NEMO4 module dedicated to Python communication. Note that a ready-to-use communication module is provided with Morays patches, see next subsection to learn how to use it.
 
 
 Register a new module
 '''''''''''''''''''''
 
-Independence of OASIS module relies on the fact that coupling properties of the fields to exchange are stored in meta-arrays ``ssnd`` and ``srcv`` defined in ``cpl_oasis3.F90``. A dimension has simply been added to those arrays to sort meta-data between all the other modules that are using the OASIS interface.
+Flexibility of OASIS in NEMO relies on the fact that coupling properties of the fields to exchange are stored in meta-arrays ``ssnd`` and ``srcv`` defined in ``cpl_oasis3.F90``. A dimension has simply been added to those arrays to sort meta-data between all the other modules that are using the OASIS interface.
 
 The first thing to do is to register your module ID in the ``cpl_oasis3.F90`` global parameters:
 
@@ -70,8 +50,6 @@ Each time a module calls the OASIS routines within NEMO, the ID of the calling m
 .. code-block :: fortran
 
     USE cpl_oasis3
-
-Note that ``lk_oasis`` is now imported from ``cpl_oasis3.F90``.
 
 
 
@@ -118,9 +96,9 @@ Each coupled field has a list of attributes to fill in accordance with the excha
     END TYPE FLD_CPL
 
 
-Longitude and latitude sizes of the field do not need to be specified. It is automatically done during the initialization of the OASIS environment. Exchange frequencies do not need to be specified either since they are written in OASIS namelist by Eophis.
+Longitude and latitude sizes of the field do not need to be specified. It is automatically done during the initialization of the OASIS environment. Exchange frequencies do not need to be specified either since they are managed by Eophis.
 
-For instance, here are the properties for ``u`` and ``u_f`` in the communication module (``ntypinf`` as ID) used by the DINO.GZ21 test case:
+For instance, here are the properties for two variables ``u`` and ``u_f`` whose IDs are ``jps_ssu`` and ``jpr_uf``. They are defined in the communication module whose ID is ``ntypinf``.
 
 .. code-block:: fortran
 
@@ -160,8 +138,8 @@ Once ``ssnd`` and ``srcv`` have been correctly filled. Finalize fields registrat
 
 .. code-block:: fortran
 
-    ! For DINO.GZ21:
-    CALL cpl_var( 2, 4, 1, ntypinf )
+    ! For above u and u_f examples
+    CALL cpl_var( 1, 1, 1, ntypinf )
 
 
 
@@ -231,10 +209,19 @@ As for sending, ``pdata`` shape must be equivalent to NEMO longitude and latitud
 Configure coupling in NEMO
 ---------------------------
 
-To facilitate the deployment, modification or development of a Morays experiment, Morays sources directly come with pre-defined communication modules named ``inffld.f90`` and ``infmod.f90``. This section describes how to configure them.
+To facilitate the deployment, modification or development of a Morays experiment, Morays patches directly come with pre-defined communication modules named ``inffld.f90`` and ``infmod.f90``. This section describes how to configure them.
 
 
 .. note:: You are of course free to build your own external communication module with a more sophisticated use of the OASIS interface in NEMO.
+
+
+The presented examples rely on the DINO.GZ21 test case. Purposes and behaviors of DINO.GZ21 are described in the NEMO **Getting started** section of this documentation. Let's resume what both entities are exchanging.
+
+NEMO intends to send:
+    - two time-evolving velocity fields ``u`` and ``v`` at a ``2700s`` frequency, on grid ``(62,199)``
+    - two fixed metric fields ``mask_u`` and ``mask_v`` on the same grid
+and to receive from GZ21 model:
+    - two forcing fields ``u_f`` and ``v_f`` with the same dimensions
 
 
 
@@ -359,4 +346,10 @@ All sendings and receptions are then performed, in that order. Received fields a
 
 Note that the received fields are directly added to the NEMO RHS that is passed as argument. This means that ``inferences()`` must be called at the right moment of the time integration. Here, it is done in ``stpmlf.F90``.
 
-.. note:: This communication module works fine but is a bit clumsy to our taste. It is planned for future work to propose a finer one with the Morays patches.
+.. note:: This communication module works fine but is a bit clumsy to our taste. It is planned for future work to propose a finer one with Morays patches.
+
+
+Compile NEMO
+------------
+
+After configurating the communication module, NEMO must be compiled with active *key_oasis3* CPP key and OASIS_v5.0 (see this `guide <https://morays-doc.readthedocs.io/en/latest/nemo.getting_started.html#base-environment>`_).

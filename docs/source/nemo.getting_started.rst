@@ -1,13 +1,12 @@
-Getting Started
+Getting started
 ===============
 
 
 .. toctree::
    :maxdepth: 2
 
-In this tutorial, we will deploy a NEMO hybrid modeling experiment. Aimed objective is to couple the ML model proposed by `Guillaumin and Zanna, 2021 <https://doi.org/10.1029/2021MS002534>`_ (GZ21) with the `DINO <https://github.com/vopikamm/DINO>`_ config.
+In this tutorial, we will deploy a Morays experiment for NEMO that is stored in the Morays collection. Objective of the experiment is to couple the ML model proposed by `Guillaumin and Zanna, 2021 <https://doi.org/10.1029/2021MS002534>`_ (GZ21) with the `DINO <https://github.com/vopikamm/DINO>`_ config.
 
-.. note:: Since the experiment is stored in a repository whose structure follows Morays template, we will also learn how to reproduce a test case from the Morays collection.
 
 Prerequisites to the turorial:
     - Operating NEMO compilation environment (see `NEMO doc <https://sites.nemo-ocean.io/user-guide/install.html>`_ for help)
@@ -33,7 +32,7 @@ Here is the difficulty: the CNN model is written with native Python libraries wh
 
 The experiment will execute the following steps:
     - NEMO is modeling the DINO ocean circulation
-    - It uses OASIS every time step to send the surface velocity fields towards the Python script
+    - It sends the surface velocity fields towards the Python script every time step
     - GZ21 model in Python script predicts the mean and standard deviation and the forcing fields
     - Results are sent back to NEMO and written in an output file with XIOS
     - Forcing fields are finally used to parameterize the subgrid momentum
@@ -41,13 +40,15 @@ The experiment will execute the following steps:
 
 
 
-1. Base environment
--------------------
+1. Morays environment
+---------------------
+
+Every Morays experiments with NEMO require a couple of shared libraries. We quickly summarize the steps to install them.
 
 Compile OASIS_v5.0
 ~~~~~~~~~~~~~~~~~~
 
-OASIS_v5.0 is the minimal required version to use the Python API of OASIS. Most of all, it must be dynamically compiled. If you installed any version of Eophis, it should be done already. Otherwise, check out `OASIS documentation <https://oasis.cerfacs.fr/en/documentation/>`_ for more details.
+OASIS is the coupling library on which both NEMO and Eophis rely to perform field exchanges. OASIS_v5.0 is the minimal required version and must be dynamically compiled. See `OASIS documentation <https://oasis.cerfacs.fr/en/documentation/>`_ for more details.
 
 .. code-block:: bash
 
@@ -75,7 +76,7 @@ Edit your own ``make.<YOUR_MACHINE>`` file. Be sure to have the following flags 
     make -f TopMakefileOasis3 pyoasis
     
 
-.. note :: Since NEMO will use OASIS, we will compile it with the OASIS_v5.0 dynamic libraries. No real difficulties here, just keep in mind where OASIS_v5.0 libraries are stored. Let's assume for the tutorial that they are at this location:
+.. note :: In the following, we will compile NEMO with OASIS. Just keep in mind where OASIS_v5.0 dynamic libraries are stored. Let's assume for the tutorial that they are at this location:
 
     .. code-block :: bash
     
@@ -87,9 +88,8 @@ Edit your own ``make.<YOUR_MACHINE>`` file. Be sure to have the following flags 
 Compile XIOS
 ~~~~~~~~~~~~
 
-XIOS will be used to output some interesting results. As NEMO, it must be compiled with the abovementioned OASIS_v5.0 dynamic libraries. Check out `XIOS documentation <https://forge.ipsl.jussieu.fr/ioserver/wiki/documentation>`_ first to learn how to compile XIOS with OASIS static libraries.
+XIOS is used by NEMO to write results. It must be compiled with the abovementioned OASIS libraries. See `XIOS documentation <https://forge.ipsl.jussieu.fr/ioserver/wiki/documentation>`_ for more details about compilation of XIOS with OASIS.
 
-Compilation of XIOS with OASIS_v5.0 dynamic libraries follows the same procedure except that the OASIS path in the ``arch-<YOUR_MACHINE>.path`` file must include the dynamic libraries directories and bindings:
 
 .. code-block:: bash
 
@@ -97,6 +97,8 @@ Compilation of XIOS with OASIS_v5.0 dynamic libraries follows the same procedure
     cd ~/
     svn co http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS2/trunk xios_oasis_5.0
     cd ~/xios_oasis_5.0/
+
+Edit your ``arch-<YOUR_MACHINE>.path`` file to include the OASIS libraries directories and bindings:
 
 .. code-block:: bash
 
@@ -106,9 +108,6 @@ Compilation of XIOS with OASIS_v5.0 dynamic libraries follows the same procedure
         OASIS_INCDIR="-I~/oasis3-mct/BLD/include/ -I~/oasis3-mct/BLD/build-shared/lib/cbindings/"
         OASIS_LIBDIR="-L~/oasis3-mct/BLD/lib"
         OASIS_LIB="-loasis.cbind -lpsmile.MPI1 -lscrip -lmct -lmpeu"
-    
-    vi archs/arch-<YOUR_MACHINE>.env
-    # ...
 
 .. code-block:: bash
 
@@ -119,19 +118,19 @@ Compilation of XIOS with OASIS_v5.0 dynamic libraries follows the same procedure
     ls lib/
     libxios.a
 
+
+
 2. Experiment environment
 -------------------------
 
-Let's take a look in the `Morays collection <https://github.com/orgs/morays-community/repositories>`_. Repositories are named with a simple convention: ``<OCEAN_CODE>-<EXPERIMENT>``. The corresponding repository for the tutorial is then ``NEMO-DINO``. We clone the tutorial branch:
+Now that we have set up the common environment for all Morays experiments, we need to install the dependencies related to the specific experiment of interest. Let's find it in the `Morays repositories <https://github.com/orgs/morays-community/repositories>`_. Those are named with a simple convention: ``<OCEAN_CODE>-<EXPERIMENT>``. The corresponding repository for the tutorial is then ``NEMO-DINO``. We clone the tutorial branch:
 
 .. code-block:: bash
 
     cd ~/
     git clone -b morays_tuto https://github.com/morays-community/NEMO-DINO.git
 
-The repository contains a ``README`` with informations about experiment context and its variations.
-
-.. note:: A variation of an experiment is another experiment that shares the same software and scientific environments. Only an unique experiment ``DINO.GZ21`` is available here. A variation example could be another hybrid DINO config with a different ML model ``DINO.ABC123``.
+The repository contains a ``README`` with informations about experiment context and motivations.
 
 The other informations listed in ``README`` are the software requirements:
     - **Compilation:** ocean code version to compile and with which potential additionnal material
@@ -151,9 +150,7 @@ In accordance with the ``README`` content, we must install *NEMO_v4.2.1* and *Eo
     cd ~/
     git clone --branch v1.0.0 https://github.com/meom-group/eophis eophis_v1.0.0
     
-Check out `Eophis doc <https://eophis.readthedocs.io/en/latest/install.html>`_ for more help about installation.
-
-We will now browse the directories of the ``DINO.GZ21`` experiment to set up the test case.
+See `Eophis documentation <https://eophis.readthedocs.io/en/latest/install.html>`_ for more help about installation. We will now browse the directories of the ``DINO.GZ21`` experiment to deploy the test case.
 
 .. code-block:: bash
 
@@ -166,7 +163,7 @@ We will now browse the directories of the ``DINO.GZ21`` experiment to set up the
 3. CONFIG - NEMO case
 ---------------------
 
-This directory contains all the material to compile NEMO. Since the **Compilation** section of the ``README`` did not mention any specific tool for the compilation, we will follow the standard NEMO `configuration structure <https://sites.nemo-ocean.io/user-guide/install.html#preparing-an-experiment>`_. We first need to create a custom test case:
+This directory contains the material to compile NEMO. Since the **Compilation** section of the ``README`` did not mention any specific tool for the compilation, we will follow the standard NEMO `configuration structure <https://sites.nemo-ocean.io/user-guide/install.html#preparing-an-experiment>`_. We first need to create a custom test case:
 
 .. code-block:: bash
 
@@ -194,7 +191,7 @@ An architecture file is of course compulsory to compile NEMO. A template for the
     cp arch-auto.fcm arch-X64_DINO_GZ21.fcm
     
 
-Regardless of the method you chose, be sure to have your architecture file copied in ``~/nemo_v4.2.1/arch/`` and to have the OASIS and XIOS paths corresponding to those compiled with OASIS_v5.0 dynamic libraries:
+Regardless of the method you chose, be sure to have your architecture file copied in ``~/nemo_v4.2.1/arch/`` and to have the OASIS and XIOS paths corresponding to those compiled with OASIS_v5.0 libraries:
 
 .. code-block:: bash
 
@@ -243,7 +240,7 @@ Experiment patch
 4. RUN - NEMO settings
 ----------------------
 
-This directory contains all the production material, as XIOS configuration files and NEMO namelists. We need them obviously:
+This directory contains all the production material, such as XIOS configuration files and NEMO namelists. We need them obviously:
 
 .. code-block:: bash
     
@@ -275,7 +272,7 @@ Script ``job.ksh`` assumes that NEMO will run on a HPC system via a SBATCH sched
 5. INFERENCES - Python material
 -------------------------------
 
-This directory contains all the Python scripts for the hybrid modeling. ``gz21_ocean_momentum`` directory is a git submodule that contains the GZ21 model package. The latter is imported and used in accordance with the experiment objectives in ``ml_models.py``. Finally, ``main.py`` contains the Eophis instructions to couple ``ml_models.py`` with NEMO.  Let's copy them to the test case:
+This directory contains the Python scripts for the hybrid modeling. ``gz21_ocean_momentum`` directory is a git submodule that contains the GZ21 model package. The latter is imported and used in accordance with the experiment objectives in ``ml_models.py``. Finally, ``main.py`` contains the Eophis instructions to couple ``ml_models.py`` with NEMO.  Let's copy them to the test case:
 
 .. code-block:: bash
 
@@ -394,7 +391,7 @@ As described in the introduction, NEMO only sends the surface velocities towards
 Going further
 -------------
 
-From now on, you have an useable deployed Morays experiment. Do not hesitate to check out and deploy other test cases to get inspired. For example, a more advanced realization of DINO.GZ21 is available on the main branch of the tutorial repository.
+From now on, you have an useable deployed Morays experiment for NEMO. Do not hesitate to check out and deploy other test cases to get inspired. For example, a more advanced realization of DINO.GZ21 is available on the main branch of the tutorial repository.
 
 Here are the locations where you can play with:
     - coupling: ``infmod.f90`` for NEMO side, ``main.py`` for Python side and global settings
@@ -404,5 +401,4 @@ Here are the locations where you can play with:
     - NEMO settings: namelists and xml files
 
  
-Next chapters of this documentation provide more details on how to configure the NEMO external communication module. Also check out `Eophis documentation <https://eophis.readthedocs.io/en/latest/>`_ to learn more about ``main.py`` configuration.
-
+Next chapters of this documentation provide more details on how to configure the NEMO external communication module, and to create a Morays experiment for NEMO from scratch.
