@@ -24,7 +24,7 @@ All Morays use cases are stored in separate repositories. Those are named with a
 
 Repository templates for each code are provided to help you:
     - `NEMO template <https://github.com/morays-community/NEMO-EXP_template>`_
-    - CROCO template (not started yet)
+    - CROCO template (soon)
 
 Choose the template corresponding to the code with which you performed your test case. Click on "Use this template" green button and choose "Create a new repository." Name it with the abovementioned convention.
 
@@ -48,7 +48,7 @@ Software requirements may be sorted in four categories:
     - **Run:** submission tools to manage the experiment execution
     - **Post-Process:** post-processing libraries and plotting tools
 
-Do no hesitate to add more requirements if necessary. Note that the repository should be associated with a doi on zenodo for citations (see `here <https://docs.github.com/en/repositories/archiving-a-github-repository/referencing-and-citing-content>`_).
+Do no hesitate to add more requirements if necessary. Note that the repository should be associated with a DOI on Zenodo for citations (see `here <https://docs.github.com/en/repositories/archiving-a-github-repository/referencing-and-citing-content>`_).
 
 
 3. Fill experiment directory

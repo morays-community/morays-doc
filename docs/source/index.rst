@@ -20,7 +20,7 @@ Contents:
 
    Overview <overview>
    Morays License <license>
-   Getting started <getting_started>
-   Deploy a ML model within NEMO <nemo>
-   Morays collections <morays_exp>
+   Deploy a Python model within NEMO <nemo>
+   Deploy a Python model within CROCO <croco>
+   Morays collection <morays_exp>
    Contribute <contribute>
