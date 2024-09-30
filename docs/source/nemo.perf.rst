@@ -7,7 +7,7 @@ Performances
 
 
 
-We present here some results to evaluate performance and cost of a hybrid NEMO experiment. The assessment test case is the 1/4deg global ocean circulation **NEMO-MLE_Fluxes** config coupled with submesoscale Mixed Layer Eddies closures. Only the first out of the 75 ocean grid levels is exchanged.
+We present here some results to evaluate performances and costs of a Morays experiment for NEMO. The assessment test case is the 1/4deg global ocean circulation `NEMO-MLE_Fluxes <https://github.com/morays-community/NEMO-MLE_Fluxes>`_ test case coupled with submesoscale Mixed Layer Eddies closures. Only the first out of the 75 ocean grid levels is exchanged.
 
 Number of processes allocated to NEMO is fixed while number of processes for Python scripts varies. Results are shown for coupling with a standard CPU analytical model, a CPU ML model, and a GPU ML model. Performances for a standard NEMO config without coupling is also shown for comparison.
 

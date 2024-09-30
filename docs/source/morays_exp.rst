@@ -5,9 +5,11 @@ Morays collection
 .. toctree::
    :maxdepth: 2
 
-This is a summary of the experiments hosted in the Morays project. To reproduce a Morays experiment, follow:
-    - `this tutorial for NEMO <https://morays-doc.readthedocs.io/en/latest/nemo.getting_started.html>`_
-    - `this tutorial for CROCO (soon)`
+This is a summary of the experiments hosted in the Morays project.
+
+To reproduce a Morays experiment, follow these tutorials:
+    - `Reproduce Morays experiments with NEMO <https://morays-doc.readthedocs.io/en/latest/nemo.getting_started.html>`_
+    - `Reproduce Morays experiments with CROCO <https://morays-doc.readthedocs.io/en/latest/croco.getting_started.html>`_
 
 
 NEMO experiments

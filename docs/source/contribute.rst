@@ -24,7 +24,7 @@ All Morays use cases are stored in separate repositories. Those are named with a
 
 Repository templates for each code are provided to help you:
     - `NEMO template <https://github.com/morays-community/NEMO-EXP_template>`_
-    - CROCO template (soon)
+    - `CROCO template <https://github.com/morays-community/CROCO-EXP_template>`_
 
 Choose the template corresponding to the code with which you performed your test case. Click on "Use this template" green button and choose "Create a new repository." Name it with the abovementioned convention.
 
