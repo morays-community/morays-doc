@@ -25,7 +25,7 @@ The work of GZ21 takes place in the context of parameterizing the ocean subgrid 
 Here is the difficulty: the CNN model is written with native Python libraries while NEMO is written in Fortran. Thus, an interface is required to make both to coexist and exchange data. Since NEMO has an OASIS interface, we can use the Eophis library to couple an external Python script that will contain the GZ21 model.
 
 
-.. image:: images/NEMO_GZ21.png
+.. image:: images/NEMO_GZ21_XIOS.png
     :width: 600px
     :align: center
 
