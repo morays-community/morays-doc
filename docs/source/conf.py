@@ -22,7 +22,7 @@ copyright = '2024, Alexis Barge, Julien Le Sommer'
 author = 'Alexis Barge, Julien Le Sommer'
 
 # The full version, including alpha/beta/rc tags
-release = '0.9.0'
+# release = '0.9.0'
 
 
 # -- General configuration ---------------------------------------------------
