@@ -40,15 +40,15 @@ Every Morays experiments are documented in a self contained separate GitHub repo
         - `Reproduce Morays experiments with NEMO <https://morays-doc.readthedocs.io/en/latest/nemo.getting_started.html>`_
         - `Reproduce Morays experiments with CROCO <https://morays-doc.readthedocs.io/en/latest/croco.getting_started.html>`_
 
-    People familiar with Eophis, ocean models and/or Morays framework are encouraged to follow these tutorials:
+    People familiar with Eophis, ocean models or Morays framework are encouraged to follow these tutorials:
         - `Create Morays experiments with NEMO <https://morays-doc.readthedocs.io/en/latest/nemo.tuto.html>`_
         - `Create Morays experiments with CROCO <https://morays-doc.readthedocs.io/en/latest/croco.tuto.html>`_
 
-    Advanced users can find advanced tools and informations in corresponding ocean model sections:
+    Advanced users can find advanced tools and informations in corresponding model sections:
         - `NEMO-Eophis <https://morays-doc.readthedocs.io/en/latest/nemo.html>`_
         - `CROCO-Eophis <https://morays-doc.readthedocs.io/en/latest/croco.html>`_
 
-    People who wants to contribute to the Morays collection with their own experiments are invited to follow:
+    People who wish to contribute to the Morays collection with their own experiments are invited to follow:
         - `Contribution guidelines <https://morays-doc.readthedocs.io/en/latest/contribute.html>`_
 
 

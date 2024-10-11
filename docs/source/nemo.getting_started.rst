@@ -56,7 +56,7 @@ OASIS is the coupling library on which both NEMO and Eophis rely to perform fiel
     cd ~/
     git clone https://gitlab.com/cerfacs/oasis3-mct.git
     cd ~/oasis3-mct
-    git checkout OASIS-MCT_5.0
+    git checkout OASIS3-MCT_5.0
     cd util/make_dir
     
 Edit your own ``make.<YOUR_MACHINE>`` file. Be sure to have the following flags defined for dynamic compilation:

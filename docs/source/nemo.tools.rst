@@ -85,6 +85,6 @@ Some libraries, as PyTorch, may be executed on both CPU and GPU with a simple hi
 You are of course free to use other libraries to transfer your model to a GPU.
 
 
-.. note :: Let's say that you need a large number of CPUs to run NEMO, a few for the Python scripts, and one GPU for the ML model. Depending on your HPC center, you might allocate the GPUs associated with the CPUs used for NEMO and potentially reserve more GPUs than you really need. This situation is likely to occur often with realistic configurations.
+.. important :: Let's say that you need a large number of CPUs to run NEMO, a few for the Python scripts, and one GPU for the ML model. Depending on your HPC center, you might allocate the GPUs associated with the CPUs used for NEMO and potentially reserve more GPUs than you really need. This situation is likely to occur often with realistic configurations.
 
     We strongly recommend you to contact the technical assistance of your HPC center to find the solution that would best fit your needs or to pull back to a pure CPU/CPU execution.

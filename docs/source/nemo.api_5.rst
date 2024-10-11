@@ -154,7 +154,7 @@ Once ``ssnd`` and ``srcv`` have been correctly filled. Finalize fields registrat
 .. code-block:: fortran
 
     ! For above u and u_f examples
-    CALL cpl_var( 1, 1, 1, ntypinf )
+    CALL cpl_var( 1, 1, 1, nmodext )
 
 
 
