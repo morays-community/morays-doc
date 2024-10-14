@@ -138,7 +138,7 @@ The other informations listed in ``README`` are the software requirements:
     - **Run:** submission tools to manage the experiment execution
     - **Post-Process:** post-processing libraries and plotting tools
 
-In accordance with the ``README`` content, we must install *NEMO_v4.2.1* and *Eophis_v1.0.0*. Other tools and scripts are already contained in the repository.
+In accordance with the ``README`` content, we must install *NEMO_v4.2.1*, *Eophis_v1.0.0* and GZ21 package. Other tools and scripts are already contained in the repository.
 
 .. code-block:: bash
 
@@ -146,11 +146,18 @@ In accordance with the ``README`` content, we must install *NEMO_v4.2.1* and *Eo
     cd ~/
     git clone --branch 4.2.1 https://forge.nemo-ocean.eu/nemo/nemo.git nemo_v4.2.1
     
-    # Clone Eophis_v0.9.2
+    # Clone Eophis_v1.0.0
     cd ~/
     git clone --branch v1.0.0 https://github.com/meom-group/eophis eophis_v1.0.0
     
-See `Eophis documentation <https://eophis.readthedocs.io/en/latest/install.html>`_ for more help about installation. We will now browse the directories of the ``DINO.GZ21`` experiment to deploy the test case.
+    # README instructions for GZ21 package
+    cd ~/NEMO-DINO
+    git submodule update --init --recursive
+    cd DINO.GZ21/INFERENCES/gz21_ocean_momentum/
+    pip install -e .
+    
+    
+We will now browse the directories of the ``DINO.GZ21`` experiment to deploy the test case.
 
 .. code-block:: bash
 
@@ -286,23 +293,7 @@ Model weights are in the folder of the same name. For this tutorial, we will use
     cp ~/NEMO-DINO/DINO.GZ21/INFERENCES/weights/gz21_huggingface/low-resolution/files/trained_model.pth   ~/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
 
 
-As a git submodule, ``gz21_ocean_momentum`` must be initialized or it will stay empty:
-
-.. code-block:: bash
-
-    cd ~/NEMO-DINO/
-    git submodule update --init --recursive
-
-
-It is now up-to-date with the original GZ21 repository and contains the package sources. We need to install it with its dependencies:
-
-.. code-block:: bash
-
-    cd ~/NEMO-DINO/DINO.GZ21/INFERENCES/gz21_ocean_momentum/
-    pip install -e .
-
-
-GZ21 model may be tested by running ``ml_models.py`` as a standalone script:
+We already installed GZ21 package in section **2. Experiment environment**. It may be tested by running ``ml_models.py`` as a standalone script:
 
 .. code-block:: bash
 
