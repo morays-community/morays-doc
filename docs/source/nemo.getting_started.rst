@@ -64,7 +64,7 @@ Edit your own ``make.<YOUR_MACHINE>`` file. Be sure to have the following flags 
 .. code-block:: bash
 
      DYNOPT = -fPIC
-     LDDYNOPT = -shared -lnetcdff -lnetcdf
+     LDDYNOPT = -shared
 
 
 .. code-block:: bash
@@ -272,7 +272,7 @@ Script ``job.ksh`` assumes that NEMO will run on a HPC system via a SBATCH sched
 5. INFERENCES - Python material
 -------------------------------
 
-This directory contains the Python scripts for the hybrid modeling. ``gz21_ocean_momentum`` directory is a git submodule that contains the GZ21 model package. The latter is imported and used in accordance with the experiment objectives in ``ml_models.py``. Finally, ``main.py`` contains the Eophis instructions to couple ``ml_models.py`` with NEMO.  Let's copy them to the test case:
+This directory contains the Python scripts for hybrid modeling. It also includes additional packages for the Python model (if necessary). Here, GZ21 model sources and its dependencies are contained in a git submodule ``gz21_ocean_momentum``. The model is imported and used in accordance with the experiment objectives in ``ml_models.py``. Finally, ``main.py`` contains the Eophis instructions to couple ``ml_models.py`` with NEMO.  Let's copy them to the test case:
 
 .. code-block:: bash
 
@@ -310,7 +310,6 @@ GZ21 model may be tested by running ``ml_models.py`` as a standalone script:
     python3 ./ml_models.py
     # Should print "Test successful"
         
-
     
 
 6. Running the experiment
