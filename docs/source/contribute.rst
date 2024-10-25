@@ -68,6 +68,11 @@ Feel free to get inspired from already existing experiments.
 Experiment variation
 --------------------
 
-A variation of an experiment is another experiment that shares the same software and scientific environments. The variation is stored in the same repository, but in a new main directory. Naming convention of the new directory is: ``<EXPERIMENT>.<VARIATION>``
+A variation of an experiment is another experiment that shares the same software and scientific environments. The variation is stored in the same repository, but in a new main directory. Naming convention of the new directory is: ``<EXPERIMENT>.<VARIATION>``. Material for the variation must be sorted as described above.
 
-Material for the variation must be sorted as described above.
+A variation consist in contributing to an already existing repository, so please proceed as follows:
+    1. Fork the repository on GitHub
+    2. Clone your fork locally
+    3. Create a branch for local development and make changes locally
+    4. Commit your changes and push your branch to GitHub
+    5. Submit a pull request through the GitHub website
