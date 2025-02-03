@@ -9,10 +9,65 @@ In this tutorial, we will deploy a Morays experiment for NEMO that is stored in 
 
 
 Prerequisites to the turorial:
-    - Operating NEMO compilation environment (see `NEMO doc <https://sites.nemo-ocean.io/user-guide/install.html>`_ for help)
+    - Operating NEMO environment (see `NEMO doc <https://sites.nemo-ocean.io/user-guide/install.html>`_ for help)
     - Operating Python environment
-    - Operating computing environment
+or:
+    - Installed Apptainer
+    - Morays container (see below)
 
+**Apptainer on Linux**
+
+.. code-block :: bash
+    
+    # Ubuntu
+    # ------
+    sudo apt update && sudo apt install -y software-properties-common
+    sudo add-apt-repository -y ppa:apptainer/ppa
+    sudo apt update && sudo apt install -y apptainer
+    
+    # Debian (amd64 ONLY)
+    # -------------------
+    cd /tmp
+    wget https://github.com/apptainer/apptainer/releases/download/v1.3.6/apptainer_1.3.6_amd64.deb
+    sudo apt install -y ./apptainer_1.3.6_amd64.deb
+    
+.. warning :: For other Linux distributions, please refer to this `guide <https://github.com/apptainer/apptainer/blob/main/INSTALL.md>`_.
+ 
+
+**Apptainer on macOS**
+
+.. code-block:: bash
+    
+    # Apptainer is available on macOS via LIMA (LInux virtual MAchines)
+    brew install qemu lima  # Install with brew
+    port install qemu lima  # Install with macports
+
+    # Create Linux VM with Apptainer
+    limactl start template://apptainer
+    limactl shell apptainer
+    
+    # NB1: copy files from VM to host
+    limactl cp apptainer:/path/to/file  /host/destination
+    
+    # NB2: remove VM on host after tutorial
+    limactl stop apptainer
+    rm -rf ~/.lima/apptainer
+
+**Run Morays container**
+
+.. code-block:: bash
+
+    # Get your hardware architecture
+    uname -m
+    #  aarch64 --> arm64
+    #  x86_64  --> amd64
+    ARCH=arm64
+
+    # Download image
+    wget https://github.com/morays-community/morays-doc/releases/download/containers/morays_env_${ARCH}.sif
+
+    # Run container
+    apptainer run --writable-tmpfs --bind $(pwd):/home/jdoe/morays_tutorial morays_env_${ARCH}.sif
 
 
 Introduction
@@ -39,11 +94,16 @@ The experiment will execute the following steps:
 
 
 
-
 1. Morays environment
 ---------------------
 
 Every Morays experiments with NEMO require a couple of shared libraries. We quickly summarize the steps to install them.
+
+.. note::
+
+    If you are running Morays container, you can skip this part until section 2.
+  
+  
 
 Compile OASIS_v5.0
 ~~~~~~~~~~~~~~~~~~
@@ -59,34 +119,50 @@ OASIS is the coupling library on which both NEMO and Eophis rely to perform fiel
     git checkout OASIS3-MCT_5.0
     cd util/make_dir
     
-Edit your own ``make.<YOUR_MACHINE>`` file. Be sure to have the following flags defined for dynamic compilation:
+Edit your own ``make.<YOUR_ARCH>`` file. Pay attention to the following important variables:
 
-.. code-block:: bash
+.. code-block:: makefile
 
+     # Dynamic flags
      DYNOPT = -fPIC
      LDDYNOPT = -shared
+     # inc and lib dir
+     NETCDF_INCLUDE = /PATH/TO/NETCDF/include
+     NETCDF_LIBRARY = -L/PATH/TO/NETCDF/lib -lnetcdf -lnetcdff
+     MPI_INCLUDE = /PATH/TO/MPI/include
+     MPILIB = -L/PATH/TO/MPI/lib -lmpi
+     # Compilers and linker
+     F90 = # mpifort -I$(MPI_INCLUDE) , ftn , mpiifort ...
+     CC =  # mpicc , cc , mpiicc ...
+     LD = $(F90) $(MPILIB)
+     # Compilation flags - adapt with your compilers
+     FCBASEFLAGS = -O2 ...
+     CCBASEFLAGD = -O2 ...
 
 
 .. code-block:: bash
     
     # Link your architecture file for compilation
-    echo "include ~/oasis3-mct/util/make_dir/make.<YOUR_MACHINE>"  >  make.inc
+    echo "include ~/oasis3-mct/util/make_dir/make.<YOUR_ARCH>"  >  make.inc
      
     # Compile dynamic libraries
     make -f TopMakefileOasis3 pyoasis
+
+    # Libraries should be there
+    ls ~/oasis3-mct/BLD/lib/
+    libmct.so   libmpeu.so   liboasis.cbind.so   libpsmile.MPI1.so   libscrip.so
+
+    
+Activate OASIS Python API. The best is to put this command in your ``bash_profile``:
+
+.. code-block :: bash
+
+    source ~/oasis3-mct/BLD/python/init.sh
     
 
-.. note :: In the following, we will compile NEMO with OASIS. Just keep in mind where OASIS_v5.0 dynamic libraries are stored. Let's assume for the tutorial that they are at this location:
 
-    .. code-block :: bash
-    
-        ls ~/oasis3-mct/BLD/lib/
-        libmct.so   libmpeu.so   liboasis.cbind.so   libpsmile.MPI1.so   libscrip.so
-
-
-
-Compile XIOS
-~~~~~~~~~~~~
+Compile XIOS with OASIS
+~~~~~~~~~~~~~~~~~~~~~~~
 
 XIOS is used by NEMO to write results. It must be compiled with the abovementioned OASIS libraries. See `XIOS documentation <https://forge.ipsl.jussieu.fr/ioserver/wiki/documentation>`_ for more details about compilation of XIOS with OASIS.
 
@@ -95,8 +171,8 @@ XIOS is used by NEMO to write results. It must be compiled with the abovemention
 
     # Clone XIOS
     cd ~/
-    svn co http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS2/trunk xios_oasis_5.0
-    cd ~/xios_oasis_5.0/
+    svn co http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS2/trunk XIOS_OASIS
+    cd ~/XIOS_OASIS/
 
 Edit your ``arch-<YOUR_MACHINE>.path`` file to include the OASIS libraries directories and bindings:
 
@@ -123,12 +199,13 @@ Edit your ``arch-<YOUR_MACHINE>.path`` file to include the OASIS libraries direc
 2. Experiment environment
 -------------------------
 
-Now that we have set up the common environment for all Morays experiments, we need to install the dependencies related to the specific experiment of interest. Let's find it in the `Morays repositories <https://github.com/orgs/morays-community/repositories>`_. Those are named with a simple convention: ``<OCEAN_CODE>-<EXPERIMENT>``. The corresponding repository for the tutorial is then ``NEMO-DINO``. We clone the tutorial branch:
+Now that we have set up the common environment for all Morays experiments, we need to install the dependencies related to the specific experiment of interest. Let's find it in the `Morays repositories <https://github.com/orgs/morays-community/repositories>`_. Those are named with a simple convention: ``<OCEAN_CODE>-<EXPERIMENT>``. The corresponding repository for the tutorial is then ``NEMO-DINO``:
 
 .. code-block:: bash
 
-    cd ~/
-    git clone -b morays_tuto https://github.com/morays-community/NEMO-DINO.git
+    mkdir -p ~/morays_tutorial
+    cd ~/morays_tutorial
+    git clone https://github.com/morays-community/NEMO-DINO.git
 
 The repository contains a ``README`` with informations about experiment context and motivations.
 
@@ -143,17 +220,17 @@ In accordance with the ``README`` content, we must install *NEMO_v4.2.1*, *Eophi
 .. code-block:: bash
 
     # Clone NEMO_v4.2.1
-    cd ~/
+    cd ~/morays_tutorial
     git clone --branch 4.2.1 https://forge.nemo-ocean.eu/nemo/nemo.git nemo_v4.2.1
     
-    # Clone Eophis_v1.0.0
-    cd ~/
+    # Clone and install Eophis_v1.0.0
+    cd ~/morays_tutorial
     git clone --branch v1.0.0 https://github.com/meom-group/eophis eophis_v1.0.0
+    cd eophis_v1.0.0
+    pip install .
     
     # README instructions for GZ21 package
-    cd ~/NEMO-DINO
-    git submodule update --init --recursive
-    cd DINO.GZ21/INFERENCES/gz21_ocean_momentum/
+    cd ~/morays_tutorial/NEMO-DINO/DINO.GZ21/INFERENCES/gz21_ocean_momentum
     pip install -e .
     
     
@@ -161,7 +238,7 @@ We will now browse the directories of the ``DINO.GZ21`` experiment to deploy the
 
 .. code-block:: bash
 
-    ls ~/NEMO-DINO/DINO.GZ21/
+    ls ~/morays_tutorial/NEMO-DINO/DINO.GZ21/
     CONFIG  INFERENCES  POST-PROCESS  RES  RUN
 
 
@@ -175,38 +252,30 @@ This directory contains the material to compile NEMO. Since the **Compilation** 
 .. code-block:: bash
 
     # Create NEMO test case
-    echo "DINO_GZ21 OCE" >> ~/nemo_v4.2.1/tests/work_cfgs.txt
-    mkdir -p ~/nemo_v4.2.1/tests/DINO_GZ21/EXPREF
-    mkdir -p ~/nemo_v4.2.1/tests/DINO_GZ21/MY_SRC
+    echo "DINO_GZ21 OCE" >> ~/morays_tutorial/nemo_v4.2.1/tests/work_cfgs.txt
+    mkdir -p ~/morays_tutorial/nemo_v4.2.1/tests/DINO_GZ21/EXPREF
+    mkdir -p ~/morays_tutorial/nemo_v4.2.1/tests/DINO_GZ21/MY_SRC
 
 
-A list of active CPP keys is given as material in the CONFIG directory. Let's use it:
+A list of active CPP keys is given as material in the CONFIG directory:
     
 .. code-block:: bash
 
     # Copy CPP keys
-    cp ~/NEMO-DINO/DINO.GZ21/CONFIG/cpp_DINO_GZ21.fcm   ~/nemo_v4.2.1/tests/DINO_GZ21/
+    cp ~/morays_tutorial/NEMO-DINO/DINO.GZ21/CONFIG/cpp_DINO_GZ21.fcm   ~/morays_tutorial/nemo_v4.2.1/tests/DINO_GZ21/
 
 
 
-An architecture file is of course compulsory to compile NEMO. A template for the experiment is also given in CONFIG. Depending on your local hardware environment, it might not be not suitable. Feel free to copy and edit it in accordance with your machine. Alternatively, the automatic generation may be used:
+An architecture file is compulsory to compile NEMO. A template for the experiment is also given in CONFIG. Depending on your hardware environment, it might not be not suitable. Feel free to copy and edit it in accordance with your machine. Alternatively, the automatic generation may be used:
 
 .. code-block:: bash
 
-    cd ~/nemo_v4.2.1/arch
+    cd ~/morays_tutorial/nemo_v4.2.1/arch
     ./build_arch-auto.sh
     cp arch-auto.fcm arch-X64_DINO_GZ21.fcm
     
 
-Regardless of the method you chose, be sure to have your architecture file copied in ``~/nemo_v4.2.1/arch/`` and to have the OASIS and XIOS paths corresponding to those compiled with OASIS_v5.0 libraries:
-
-.. code-block:: bash
-
-    # XIOS and OASIS path
-    vi ~/NEMO-DINO/DINO.GZ21/CONFIG/arch-X64_DINO_GZ21.fcm
-    # [...]
-    %XIOS_HOME          ~/xios_oasis_5.0
-    %OASIS_HOME         ~/oasis3-mct/BLD
+Regardless of the method you chose, be sure to have your architecture file copied in ``~/morays_tutorial/nemo_v4.2.1/arch/`` and to have the OASIS and XIOS paths corresponding to those compiled with OASIS_v5.0 libraries.
 
 
 
@@ -217,16 +286,16 @@ Morays patch
 
 .. code-block:: bash
 
-    cd ~/
+    cd ~/morays_tutorial
     git clone https://github.com/morays-community/Patches-NEMO.git
 
 
-We transfer now the Morays sources for NEMO_v4.2.1 to our custom test case. Only the sources of the OCE module are needed:
+We transfer the Morays sources for NEMO_v4.2.1 to our custom test case. Only the sources of the OCE module are needed:
 
 .. code-block:: bash
 
     # Copy Morays sources
-    cp ~/Patches-NEMO/NEMO_v4.2.1/OCE/*   ~/nemo_v4.2.1/tests/DINO_GZ21/MY_SRC/
+    cp ~/morays_tutorial/Patches-NEMO/NEMO_v4.2.1/OCE/*   ~/morays_tutorial/nemo_v4.2.1/tests/DINO_GZ21/MY_SRC/
 
 
 
@@ -239,7 +308,7 @@ Experiment patch
 .. code-block:: bash
 
     # Copy experiment sources
-    cp ~/NEMO-DINO/DINO.GZ21/CONFIG/my_src/*   ~/nemo_v4.2.1/tests/DINO_GZ21/MY_SRC/
+    cp ~/morays_tutorial/NEMO-DINO/DINO.GZ21/CONFIG/my_src/*   ~/morays_tutorial/nemo_v4.2.1/tests/DINO_GZ21/MY_SRC/
 
 
 
@@ -252,23 +321,23 @@ This directory contains all the production material, such as XIOS configuration 
 .. code-block:: bash
     
     # Copy xml files and namelists
-    cp ~/NEMO-DINO/DINO.GZ21/RUN/NAMELISTS/*   ~/nemo_v4.2.1/tests/DINO_GZ21/EXPREF/
-    cp ~/NEMO-DINO/DINO.GZ21/RUN/XML/*   ~/nemo_v4.2.1/tests/DINO_GZ21/EXPREF/
+    cp ~/morays_tutorial/NEMO-DINO/DINO.GZ21/RUN/NAMELISTS/*   ~/morays_tutorial/nemo_v4.2.1/tests/DINO_GZ21/EXPREF/
+    cp ~/morays_tutorial/NEMO-DINO/DINO.GZ21/RUN/XML/*   ~/morays_tutorial/nemo_v4.2.1/tests/DINO_GZ21/EXPREF/
 
 
-We have now everything we need to compile NEMO and deploy the config:
+We have everything we need to compile NEMO:
 
 .. code-block:: bash
 
-    cd ~/nemo_v4.2.1
-    ./makenemo -m "X64_DINO_GZ21" -a DINO_GZ21 -n "MY_DINO_GZ21" -j 8
+    cd ~/morays_tutorial/nemo_v4.2.1
+    ./makenemo -m "X64_DINO_GZ21_GCC" -a DINO_GZ21 -n "MY_DINO_GZ21" -j 8
 
 
 In RUN directory is also contained the execution material for the experiment. Except ``job.ksh``, no particular tool to manage the run is specified in ``README``:
 
 .. code-block:: bash
     
-    cp ~/NEMO-DINO/DINO.GZ21/RUN/job.ksh   ~/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
+    cp ~/morays_tutorial/NEMO-DINO/DINO.GZ21/RUN/job.ksh   ~/morays_tutorial/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
 
 
 Script ``job.ksh`` assumes that NEMO will run on a HPC system via a SBATCH scheduler. Adapt script content or remove SBATCH header if necessary.
@@ -283,21 +352,21 @@ This directory contains the Python scripts for hybrid modeling. It also includes
 
 .. code-block:: bash
 
-    cp ~/NEMO-DINO/DINO.GZ21/INFERENCES/*.py   ~/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
+    cp ~/morays_tutorial/NEMO-DINO/DINO.GZ21/INFERENCES/*.py   ~/morays_tutorial/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
     
     
 Model weights are in the folder of the same name. For this tutorial, we will use those:
     
 .. code-block:: bash
 
-    cp ~/NEMO-DINO/DINO.GZ21/INFERENCES/weights/gz21_huggingface/low-resolution/files/trained_model.pth   ~/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
+    cp ~/morays_tutorial/NEMO-DINO/DINO.GZ21/INFERENCES/weights/gz21_huggingface/low-resolution/files/trained_model.pth   ~/morays_tutorial/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
 
 
 We already installed GZ21 package in section **2. Experiment environment**. It may be tested by running ``ml_models.py`` as a standalone script:
 
 .. code-block:: bash
 
-    cd ~/NEMO-DINO/DINO.GZ21/INFERENCES/
+    cd ~/morays_tutorial/NEMO-DINO/DINO.GZ21/INFERENCES/
     python3 ./ml_models.py
     # Should print "Test successful"
         
@@ -310,7 +379,7 @@ Everything is ready to execute the hybrid experiment. Submit the run with ``job.
 
 .. code-block:: bash
 
-    cd ~/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
+    cd ~/morays_tutorial/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
 
     # clean working directory
     touch namcouple
@@ -349,31 +418,31 @@ If run is going well, Eophis log should contain messages like these:
 This means that the exchanges are well performed. Check out also that output files ``NEVERWORLD.1d_gridUsurf.nc`` and ``NEVERWORLD.1d_gridVsurf.nc`` have been created. They contain the subgrid forcing fields computed by GZ21 model.
 
 
-.. note:: If your computing environment is able to give you an access to a CUDA-compatible GPU, ``ml_models.py`` will automatically transfer the prediction execution on the GPU while NEMO and Eophis will still be executed on CPUs.
+.. note:: If your computing environment is able to give you an access to a CUDA-compatible GPU, ``ml_models.py`` will automatically execute the prediction on the GPU while NEMO and Eophis will be executed on CPUs.
 
 
 
 7. POST-PROCESS and RES
 -----------------------
 
-POST-PROCESS directory contains material and/or scripts to compute and plot results. Those are then stored in the RES directory to be available for consultation. In this tutorial, only a simple Python script ``plots_res.py`` is to be executed to plot figures. Required dependencies are also given.
+POST-PROCESS directory contains material and/or scripts to compute and plot results. The latter are stored in the RES directory to be available for consultation. In this tutorial, only a simple Python script ``plots_res.py`` should be executed to plot figures. Required dependencies are also given.
 
 
 .. code-block:: bash
 
     # install dependencies, if necessary
-    cd ~/NEMO-DINO/DINO.GZ21/POST-PROCESS/
+    cd ~/morays_tutorial/NEMO-DINO/DINO.GZ21/POST-PROCESS/
     pip install -r requirements.txt
-    cp plots_res.py  ~/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
+    cp plots_res.py  ~/morays_tutorial/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
     
-    # Plot figures
-    cd ~/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
+    # Plot, you might need to exit container (and lima VM) to visualize figures
+    cd ~/morays_tutorial/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
     python3 ./plots_res.py
 
 
 If everything went good, we should have similar figures than those stored in RES. Same plots for a standard DINO config without GZ21 model are also stored for comparison.
 
-As described in the introduction, NEMO only sends the surface velocities towards GZ21 model. However, the implementation allows to send the whole 3D grid if you wish. Just adapt the value of ``nn_lvl`` in the NEMO namelist.
+As described in the introduction, NEMO only sends the surface velocities towards GZ21 model. However, the implementation allows to send the whole 3D grid if you wish. Adapt the value of ``nn_lvl`` in NEMO namelist.
 
 
 
@@ -381,7 +450,7 @@ As described in the introduction, NEMO only sends the surface velocities towards
 Going further
 -------------
 
-From now on, you have an usable deployed Morays experiment for NEMO. Do not hesitate to check out and deploy other test cases to get inspired. For example, a more advanced realization of DINO.GZ21 is available on the main branch of the tutorial repository.
+From now on, you have an usable deployed Morays experiment for NEMO. Do not hesitate to check out and deploy other test cases to get inspired.
 
 Here are the locations where you can play with:
     - coupling: ``infmod.f90`` for NEMO side, ``main.py`` for Python side and global settings
@@ -389,6 +458,5 @@ Here are the locations where you can play with:
     - computation of forcing fields and ML model configuration: ``ml_models.py``
     - use of forcing fields: ``infmod.f90`` and any module that imports ``inffld.f90``
     - NEMO settings: namelists and xml files
-
  
 Next sections provide more details on how to configure the NEMO external communication module, and to create a Morays experiment for NEMO from scratch.
