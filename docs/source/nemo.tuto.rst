@@ -133,7 +133,7 @@ Build config:
     
     # Compile -- adapt arch file if you are not running Morays container
     cp cfgs/C1D_PAPA32/arch-C1D_PAPA32_GCC.fcm   arch/
-    ./makenemo -m "C1D_PAPA32_GCC" -r C1D_PAPA32
+    ./makenemo -m "C1D_PAPA32_GCC" -r C1D_PAPA32 -j 3
     
     
 and run NEMO:
@@ -590,7 +590,7 @@ Finally build C1D_PAPA32.ASFC:
 
     # Compile
     cd ~/morays_tutorial/nemo_v4.2.1/
-    ./makenemo -m "C1D_PAPA32_ASFC_GCC" -r C1D_PAPA32.ASFC
+    ./makenemo -m "C1D_PAPA32_ASFC_GCC" -r C1D_PAPA32.ASFC -j 3
     
 
 
