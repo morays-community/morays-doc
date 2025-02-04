@@ -6,7 +6,7 @@ Tutorial: Create a Morays experiment for NEMO
    :maxdepth: 2
 
 
-In this tutorial we will create a Morays experiment for NEMO from scratch. Objective is to deploy the Deep Neural Network (DNN) model proposed by `Liang et al. 2022 <https://doi.org/10.1016/j.ocemod.2022.102059>`_ (L22DNN) within the `C1D_PAPA <https://doi.org/10.5194/gmd-8-69-2015>`_ NEMO config.
+In this tutorial we will create a Morays experiment for NEMO from scratch. Objective is to deploy the Python software `AirSeaFluxCode <https://github.com/NOCSurfaceProcesses/AirSeaFluxCode>`_ (ASFC) developed by `Biri et al. 2023 <https://doi.org/10.3389/fmars.2022.1049168>`_ within the `C1D_PAPA <https://doi.org/10.5194/gmd-8-69-2015>`_ NEMO config.
 
 
 Prerequisites to the turorial:
@@ -77,30 +77,32 @@ or:
 Introduction
 ------------
 
-C1D_PAPA is a 1D column NEMO configuration used to isolate and study vertical processes. It models turbulent-mixing behaviour over 1 year at Ocean Station PAPA, located in the North Pacific Ocean. For the tutorial, we will use a slightly modified version of the test case in which the vertical grid is regurlaly discretized on 32 depth levels over 200m, denoted hereafter as C1D_PAPA32.
+C1D_PAPA is a 1D column NEMO configuration used to isolate and study vertical processes. It models turbulent-mixing behaviour over 1 year at Ocean Station PAPA, located in the North Pacific Ocean. For the tutorial, we will use a slightly modified version of the test case in which the vertical grid is regularly discretized on 32 depth levels over 200m, denoted hereafter as C1D_PAPA32.
 
-L22DNN takes place in the context of parameterizing vertical mixing in ocean surface boundary layer. The model takes vertical temperature, salinity and Stokes drift profiles, surface wind stress vector, and surface heat flux as inputs. Outputs of the model are the time derivatives due to turbulent mixing for temperature and salinity.
+ASFC is a package designed to allow easy exploration of different bulk formulae parameterizations. We wish to compute air-sea fluxes in NEMO with help of ASFC.
+The latter is written with native Python libraries while NEMO is written in Fortran. Since NEMO has an OASIS interface, we can use the Eophis library to couple an external Python script that will contain ASFC model.
 
-The DNN is written with native Python libraries while NEMO is written in Fortran. Since NEMO has an OASIS interface, we can use the Eophis library to couple an external Python script that will contain the L22DNN model.
+We arbitrarily choose an ASFC parameterization that takes wind speed module, potential air temperature, sea surface temperature, specific humidity and sea level pressure as inputs. Wind stress module, sensible, latent and vaporization heat are the outputs of the Python model.
 
-.. image:: images/NEMO_L22DNN_XIOS.png
-    :width: 600px
+
+.. image:: images/NEMO_ASFC_XIOS.png
+    :width: 650px
     :align: center
 
 
 The final experiment will execute the following steps:
     - NEMO is modeling C1D_PAPA32 turbulent mixing
-    - It sends the inputs to a Python script that contains L22DNN
-    - L22DNN infers mixing temperature and salinity time derivative
+    - It sends the inputs to a Python script that contains ASFC
+    - ASFC computes air-sea fluxes from inputs
     - Results are sent back to NEMO and written in an output file with XIOS
-    - Time derivatives are used to update temperature and salinity profiles
+    - Air-sea fluxes are used to compute surface boundary condition
 
 
 
 1. Run standard C1D_PAPA32
 --------------------------
 
-We start by running standard C1D_PAPA32 without L22DNN. Get a copy of NEMO v4.2.1:
+We start by running standard C1D_PAPA32 without ASFC. Get a copy of NEMO v4.2.1:
 
 .. code-block:: bash
 
@@ -129,7 +131,7 @@ Build config:
     
     # Compile -- adapt arch file if you are not running Morays container
     cp cfgs/C1D_PAPA32/arch-C1D_PAPA32_GCC.fcm   arch/
-    ./makenemo -m "C1D_PAPA32_GCC" -r C1D_PAPA32 -n C1D_PAPA32
+    ./makenemo -m "C1D_PAPA32_GCC" -r C1D_PAPA32
     
     
 and run NEMO:
@@ -154,62 +156,43 @@ You should find netcdf files ``C1D_PAPA32_1d_20100615_20110614_grid_<T,U,V,W>.nc
 
  
 
-2. Run L22DNN Model
--------------------
+2. Run ASFC model
+-----------------
 
-We have an operating NEMO configuration. Let's focus now on the L22DNN model. As mentionned earlier, it must be written in an external Python script. Weights and trained model are provided in this repository:
+We have an operating NEMO configuration. Let's focus now on the ASFC model. As mentionned earlier, it must be written in an external Python script. ASFC code and an implementation of the model are provided in this repository:
 
 .. code-block:: bash
 
-    # Clone L22DNN model
-    git clone https://github.com/alexis-barge/L22DNN.git   ~/morays_tutorial/L22DNN
-    cd ~/morays_tutorial/L22DNN
+    # Clone and install ASFC model
+    cd ~/morays_tutorial/
+    git clone https://github.com/TRACCS-COMPACT/AG2025-workshop-ocean-ml-coupling.git  ASFC
+    cd ASFC/ASFC/AirSeaFluxCode/AirSeaFluxCode/
+    pip install -e .
 
-Edit ``models.py``, an empty function ``L22DNN()`` that takes numpy arrays for all required inputs is already defined. Complete content of ``L22DNN()`` to convert inputs into compatible DNN format and outputs into numpy arrays, as specified in script header.
+Edit ``~/morays_tutorial/ASFC/ASFC/models.py``, a function ``airseaflux()`` that takes numpy arrays for all required inputs is already defined. Those are passed in ``AirSeaFluxCode()`` in which air-sea fluxes are computed. Complete call of ``AirSeaFluxCode()`` as follows to use `Zeng et al. 1998 <https://journals.ametsoc.org/view/journals/clim/11/10/1520-0442_1998_011_2628_iobaaf_2.0.co_2.xml>`_ method and bulk formulation for sea surface temperature:
 
-
-.. code-block:: python
-
-    def L22DNN(T,S,Q,taux,tauy,stx,sty):
-        if Is_None(T,S,Q,taux,tauy,sty,stx):
-            return None, None
-        else:
-            global dnn
-            # format inputs
-            packed_inputs = ...
-            packed_tensor = tf.convert_to_tensor(packed_inputs.astype('float32'))
-            
-            # predict
-            preds = dnn(packed_tensor)
-            
-            # format outputs
-            dTdt = preds["dense_4"].numpy()
-            dSdt = preds["dense_4"].numpy()
-            return dTdt, dSdt
-
-DNN is loaded in ``load_model()`` during script initialization . Complete with weights path as follows:
 
 .. code-block:: python
 
-    def load_model(path=''):
-        """ Load Tensor Flow model from keras-saved neural network """
-        saved_model = tf.saved_model.load(path)
-        dnn = saved_model.signatures["serving_default"]
-        return dnn
+        # compute Air Sea fluxes
+        res = AirSeaFluxCode( wnd, tair, sst, "bulk", meth="UA", lat=np.array([50]), hum=['q', hum], P=slp, \
+                              hin=10.0, maxiter=10, out_var = ( "tau", "latent", "sensible", "lv" )
 
-Script ``models.py`` can be executed lonely with random arrays as inputs. Run it to check that the DNN works correctly:
+
+Script ``models.py`` can be executed lonely with user-defined typical values as inputs (feel free to modify them). Run it to check that the model works correctly:
 
 .. code-block :: bash
 
     python3 ./models.py
     # Should print:
-    #   Returned dTdt shape: (1,1,32)
+    #   Returned tau shape: (1,1,1)
+    #   tau: ... , tair: ...
     #   Test successful
 
 
 .. note ::
 
-    We have now an operating L22DNN script. However, ``models.py`` does not possess an OASIS interface and cannot be coupled with NEMO. In the next sections, we will build the Eophis scripts and configure NEMO to set up the coupling.
+    We have now an operating ASFC script. However, ``models.py`` does not possess an OASIS interface and cannot be coupled with NEMO. In the next sections, we will build the Eophis scripts and configure NEMO to set up the coupling.
 
 
 3. Set up coupling environment
@@ -229,13 +212,12 @@ Time has come to install Eophis:
 Define the exchanges
 ~~~~~~~~~~~~~~~~~~~~
 
-An Eophis script is provided in the L22DNN repository (``~/morays_tutorial/L22DNN/main.py``). The script may execute ``preproduction()`` or ``production()``. The first function is used to generate coupling material. The second one contains instructions to perform the coupling itself. For both, we need to define what we want to exchange in ``ocean_info()``:
+An Eophis script is provided in the ASFC repository (``~/morays_tutorial/ASFC/ASFC/main.py``). The script may execute ``preproduction()`` or ``production()``. The first function is used to generate coupling material. The second one contains instructions to perform the coupling itself. For both, we need to define what we want to exchange in ``ocean_info()``:
 
 Eophis needs to receive from NEMO:
-    - whole profiles ``T``, ``S``, ``Stokes_x``, ``Stokes_y`` at each time step, on grid ``(1,1,32)``
-    - surface fields ``Q``, ``Taux``, ``Tauy`` at each time step, on grid ``(1,1,1)``
-and to send back results from L22DNN:
-    -  ``dTdt``, ``dSdt``, at each time step, on grid ``(1,1,32)``
+    - surface fields ``wnd``, ``tair``, ``sst``, ``hum``, ``slp`` at each time step, on grid ``(1,1,1)``
+and to send back results from ASFC:
+    -  ``tau``, ``latent``, ``sensible``, ``evap`` at each time step, on grid ``(1,1,1)``
 
 
 In Eophis, exchanges are defined in Tunnel. An empty Tunnel ``TO_NEMO`` (step 1) already exists:
@@ -266,14 +248,13 @@ What remains is to define exchanges themselves. According to NEMO namelist, time
     tunnel_config = list()
     tunnel_config.append( { 'label' : 'TO_NEMO', \
                             'grids' : { 'C1D' : {'npts' : (1,1)} }, \
-                            'exchs' : [ {'freq' : 1800, 'grd' : 'C1D' , 'lvl' : 32, 'in' : ['T','S','Stokes_x','Stokes_y'], 'out' : ['dTdt','dSdt'] }, \
-                                        {'freq' : 1800, 'grd' : 'C1D' , 'lvl' : 1,  'in' : ['Q','TAUx','TAUy'], 'out' : [] } ] }
+                            'exchs' : [ {'freq' : 1800, 'grd' : 'C1D', 'lvl' : 1, 'in' : ['wnd','tair','sst','hum','slp'], 'out' : ['tau','latent','sensible','evap']} ] }
                         )
 
 
-First exchange line may be read as:
+The exchange line may be read as:
 
-    every ``1800`` seconds, execute the receiving of field ``T``, ``S``, ``Stokes_x``, ``Stokes_y`` and the sending back of fields ``dTdt``, ``dSdt`` on the first ``32`` levels of grid ``C1D``.
+    every ``1800`` seconds, execute the receiving of field ``wnd``, ``tair``, ``sst``, ``hum``, ``slp`` and the sending back of fields ``tau``, ``latent``, ``sensible``, ``evap`` on the first level of grid ``C1D``.
 
 Create Tunnel object (step 2) with:
 
@@ -289,7 +270,7 @@ OASIS material is generated with ``write_coupling_namelist()``, which requires t
 
 .. code-block :: python
 
-    nemo_nml = eophis.FortranNamelist(os.path.join(os.getcwd(),'namelist_cfg'))
+    nemo_nml = eophis.FortranNamelist('~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32/EXPREF/namelist_cfg')
     
 Thus, get namelist parameters (step 3) with:
     
@@ -322,11 +303,11 @@ We complete function ``production()`` to drive exchanges all along the run. Sinc
 
     eophis.open_tunnels()
 
-Coupling is effective. Fields can be received and used as arguments for L22DNN. Import it (step 6):
+Coupling is effective. Fields can be received and used as arguments for ASFC. Import it (step 6):
 
 .. code-block :: python
 
-    from models import L22DNN
+    from models import airseaflux
     
     
 Exchanges must be synchronized in time, this is done by Loop. Loop requires a Tunnel to work with, number of time iteration, and time step value. Define Loop (step 7) as follows:
@@ -336,7 +317,7 @@ Exchanges must be synchronized in time, this is done by Loop. Loop requires a Tu
     @eophis.all_in_all_out( geo_model=to_nemo, step=step, niter=niter )
 
 
-Final step is to specify connexions between the exchanged data and L22DNN. Connect received data, data to send and L22DNN in ``loop_core()`` (step 8):
+Final step is to specify connexions between the exchanged data and ASFC. Connect received data, data to send and ASFC in ``loop_core()`` (step 8):
 
 .. code-block :: python
 
@@ -346,43 +327,44 @@ Final step is to specify connexions between the exchanged data and L22DNN. Conne
         inputs dictionnary contains variables defined in Tunnel exchanges, and received by Eophis from NEMO.
         
         """
-        outputs = {}
-        outputs['dTdt'], outputs['dSdt'] = L22DNN( inputs['T'], inputs['S'], inputs['Q'], \
-                                                   inputs['TAUx'], inputs['TAUy'],        \
-                                                   inputs['Stokes_x'], inputs['Stokes_y'] \
-                                                 )
+        packed_res = airseaflux( inputs['wnd'], inputs['tair'], inputs['sst'], inputs['hum'], inputs['slp'] )
+
+        outputs= {}
+        outputs['tau'], outputs['latent'], outputs['sensible'], outputs['evap'] = packed_res
+
         return outputs
 
 We will now configure NEMO in accordance with coupling environment defined by Eophis.
 
 
-4. Build C1D_PAPA32.L22DNN
---------------------------
+4. Build C1D_PAPA32.ASFC
+------------------------
 
 OASIS-built NEMO
 ~~~~~~~~~~~~~~~~
 
-C1D_PAPA32.L22DNN models the same C1D_PAPA32 ocean circulation. Duplicate the case:
+C1D_PAPA32.ASFC models the same C1D_PAPA32 ocean circulation. Duplicate the case:
 
 .. code-block:: bash
 
-    # Create C1D_PAPA32.L22DNN test case
+    # Create C1D_PAPA32.ASFC test case
     cd ~/morays_tutorial/nemo_v4.2.1/cfgs
-    mkdir C1D_PAPA32.L22DNN
-    echo "C1D_PAPA32.L22DNN OCE" >> work_cfgs.txt
+    mkdir C1D_PAPA32.ASFC
+    echo "C1D_PAPA32.ASFC OCE" >> work_cfgs.txt
     
     # Copy C1D_PAPA32 material
-    cp -r C1D_PAPA32/EXPREF   C1D_PAPA32.L22DNN/
-    cp -r C1D_PAPA32/MY_SRC   C1D_PAPA32.L22DNN/
+    cp -r C1D_PAPA32/EXPREF   C1D_PAPA32.ASFC/
+    cp -r C1D_PAPA32/MY_SRC   C1D_PAPA32.ASFC/
+    cp -r C1D_PAPA32/FORCING  C1D_PAPA32.ASFC/
 
 and update experiment name in NEMO namelist:
 
 .. code-block:: bash
 
-    cd ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/EXPREF
+    cd ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.ASFC/EXPREF
     vi namelist_cfg
         # ...
-        cn_exp      = "C1D_PAPA32.L22DNN" !  experience name
+        cn_exp      = "C1D_PAPA32.ASFC" !  experience name
     
     
 This configuration must be compatible with an OASIS build. OASIS interface in NEMO is activated by ``key_oasis3`` CPP key. We add it to those already used by C1D-PAPA32:
@@ -390,7 +372,7 @@ This configuration must be compatible with an OASIS build. OASIS interface in NE
 .. code-block:: bash
 
     # Create CPP key file
-    echo " bld::tool::fppkeys   key_xios key_linssh key_oasis3" >> ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/cpp_C1D_PAPA32.L22DNN.fcm
+    echo " bld::tool::fppkeys   key_xios key_linssh key_oasis3" >> ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.ASFC/cpp_C1D_PAPA32.ASFC.fcm
 
 
 OASIS and XIOS (compiled with OASIS) nmust be linked during NEMO compilation. Duplicate C1D_PAPA32 arch file and include them:
@@ -399,16 +381,16 @@ OASIS and XIOS (compiled with OASIS) nmust be linked during NEMO compilation. Du
 
     # New arch file
     cd ~/morays_tutorial/nemo_v4.2.1/arch
-    cp arch-C1D_PAPA32_GCC.fcm   arch-C1D_PAPA32_L22DNN_GCC.fcm
+    cp arch-C1D_PAPA32_GCC.fcm   arch-C1D_PAPA32_ASFC_GCC.fcm
 
     # Modify following lines: template is valid for Morays container
-    vi arch-C1D_PAPA32_L22DNN_GCC.fcm
+    vi arch-C1D_PAPA32_ASFC_GCC.fcm
         # ...
         %XIOS_HOME      /home/jdoe/XIOS_OASIS
         %OASIS_HOME     /home/jdoe/oasis3-mct/BLD
         # ...
         %OASIS_INC      -I%OASIS_HOME/include -I%OASIS_HOME/build-shared/lib/cbindings
-        $OASIS_LIB      -L%OASIS_HOME/lib -loasis.cbind -lpsmile.MPI1 -lmct -lmpeu -lscrip
+        %OASIS_LIB      -L%OASIS_HOME/lib -loasis.cbind -lpsmile.MPI1 -lmct -lmpeu -lscrip
         # ...
         %USER_INC       %XIOS_INC %OASIS_INC %NCDF_INC
         %USER_LIB       %XIOS_LIB %OASIS_LIB %NCDF_LIB
@@ -418,12 +400,12 @@ Finally configure XIOS to be aware of OASIS environment:
 
 .. code-block:: bash
 
-    vi ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/EXPREF/iodef.xml
+    vi ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.ASFC/EXPREF/iodef.xml
         # ...
         <variable id="using_oasis"               type="bool">true</variable>
 
 
-Minimal NEMO sources modifications are required to set up a hybrid ML-NEMO experiment. Those modifications are provided by Morays patch. It enables creation of independent OASIS modules. It can be obtained in this repository:
+Minimal NEMO sources modifications are required to set up a hybrid Python-NEMO experiment. Those modifications are provided by Morays patch. It enables creation of independent OASIS modules. It can be obtained in this repository:
 
 
 .. code-block :: bash
@@ -436,47 +418,53 @@ We transfer Morays sources for NEMO_v4.2.1 OCE module to our case:
 
 .. code-block :: bash
 
-    cp ~/morays_tutorial/Patches-NEMO/NEMO_v4.2.1/OCE/*   ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/MY_SRC/
+    cp ~/morays_tutorial/Patches-NEMO/NEMO_v4.2.1/OCE/*   ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.ASFC/MY_SRC/
 
+.. warning ::
 
+    For the tutorial, we will use a pre-defined version of Morays patch. Copy this extra file:
+    
+    .. code-block :: bash
+    
+        cp ~/morays_tutorial/ASFC/ASFC/infmod.F90   ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.ASFC/MY_SRC/
 
 Configure NEMO
 ~~~~~~~~~~~~~~
 
-Morays patch comes with a pre-defined communication module for Python that needs to be configured. Edit ``inffld.f90`` and allocate fields to store time derivatives returned by L22DNN:
+Morays patch comes with a pre-defined communication module for Python that needs to be configured. Edit ``inffld.F90`` and allocate fields to store fields returned by ASFC:
 
 .. code-block :: bash
 
-    vi ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/MY_SRC/inffld.f90
+    vi ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.ASFC/MY_SRC/inffld.F90
 
 
 .. code-block :: Fortran
     
-        ! Line 30
-        REAL(wp), PUBLIC, ALLOCATABLE, SAVE, DIMENSION(:,:,:)  :: dTdt, dSdt
+        ! Line 25
+        REAL(wp), PUBLIC, ALLOCATABLE, SAVE, DIMENSION(:,:)  :: ext_sensible, ext_latent, ext_taum, ext_evap
         ! Line 42
-        ALLOCATE( dTdt(jpi,jpj,jpk), dSdt(jpi,jpj,jpk) , STAT=ierr )
+        ALLOCATE( ext_taum(jpi,jpj), ext_latent(jpi,jpj), ext_sensible(jpi,jpj), ext_evap(jpi,jpj) , STAT=ierr )
         ! Line 56
-        56 DEALLOCATE( dTdt, dSdt  , STAT=ierr )
+        DEALLOCATE( ext_taum, ext_latent, ext_sensible, ext_evap  , STAT=ierr )
 
-Python communication module is in ``infmod.f90``. Create IDs for the fields to exchange (step A), order does not matter:
+Python communication module is in ``infmod.F90``. Create IDs for the fields to exchange (step A), order does not matter:
 
 .. code-block :: Fortran
 
    ! Fields to send -- jps_###
-   INTEGER, PARAMETER ::   jps_t = 1    ! sea temperature
-   INTEGER, PARAMETER ::   jps_s = 2    ! sea salinity
-   INTEGER, PARAMETER ::   jps_q  = 3   ! surface heat flux
-   INTEGER, PARAMETER ::   jps_taux = 4 ! wind stress-x
-   INTEGER, PARAMETER ::   jps_tauy = 5 ! wind stress-y
-   INTEGER, PARAMETER ::   jps_stx = 6  ! Stokes Drift-x
-   INTEGER, PARAMETER ::   jps_sty = 7  ! Stokes Drift-y
-   INTEGER, PARAMETER ::   jps_inf = 7  ! total number of sendings for inferences
+   INTEGER, PARAMETER ::   jps_wnd  = 1 ! Relative wind speed
+   INTEGER, PARAMETER ::   jps_tair = 2 ! Potential air temperature
+   INTEGER, PARAMETER ::   jps_sst  = 3 ! Sea surface temperature
+   INTEGER, PARAMETER ::   jps_hum  = 4 ! Specific humidity
+   INTEGER, PARAMETER ::   jps_slp  = 5 ! Sea level pressure
+   INTEGER, PARAMETER ::   jps_inf = 5  ! total number of sendings
 
    ! Fields to receive -- jpr_###
-   INTEGER, PARAMETER ::   jpr_dTdt = 1   ! dT/dt profile
-   INTEGER, PARAMETER ::   jpr_dSdt = 2   ! dS/dt profile
-   INTEGER, PARAMETER ::   jpr_inf = 2   ! total number of inference receptions
+   INTEGER, PARAMETER ::   jpr_lat = 1   ! Latent heat
+   INTEGER, PARAMETER ::   jpr_sen = 2   ! Sensible heat
+   INTEGER, PARAMETER ::   jpr_evp = 3   ! Vaporization heat
+   INTEGER, PARAMETER ::   jpr_tau = 4   ! Wind stress
+   INTEGER, PARAMETER ::   jpr_inf = 4   ! total number of receptions
 
 
 Coupling properties for each field must be defined in ``inferences_init()`` subroutine. Let's focus on two of them that are initialized this way:
@@ -489,153 +477,126 @@ Coupling properties for each field must be defined in ``inferences_init()`` subr
       ! Default properties for fields to send
       ssnd(ntypinf,:)%nlvl = 1  ;  ssnd(ntypinf,:)%clname = ''
 
-First dimension of ``srcv`` and ``ssnd`` corresponds to module ID. Second dimension takes field IDs. ``nlvl`` is the number of depth level for 3D coupling, and ``clname`` is the alias under which OASIS will manipulate the field. Aliases are available in Eophis preproduction log ``eophis.out``:
+First dimension of ``srcv`` and ``ssnd`` corresponds to module ID. Second dimension takes field IDs. ``nlvl`` is the number of depth level for 3D coupling, and ``clname`` is the alias under which OASIS will manipulate the field. Since only the surface level is required for all fields, we can keep the default value for ``nlvl``. Aliases are available in Eophis preproduction log ``eophis.out``:
 
 .. code-block :: bash
 
-    cat ~/morays_tutorial/L22DNN/eophis.out
+    cat ~/morays_tutorial/ASFC/ASFC/eophis.out
         # [...]
-        -------- Tunnel TO_NEMO registered --------
+        -------- Tunnel TO_NEMO_FIELDS registered --------
           namcouple variable names
             Earth side:
-              - T -> E_OUT_0
-              - S -> E_OUT_1
-              - Stokes_x -> E_OUT_2
-              - Stokes_y -> E_OUT_3
-              - dTdt -> E_IN_0
-              - dSdT -> E_IN_1
-              - Q -> E_OUT_4
-              - TAUx -> E_OUT_5
-              - TAUy -> E_OUT_6
+              - wnd -> E_OUT_0
+              - tair -> E_OUT_1
+              - sst -> E_OUT_2
+              - hum -> E_OUT_3
+              - slp -> E_OUT_4
+              - tau -> E_IN_0
+              - latent -> E_IN_1
+              - sensible -> E_IN_2
+              - evap -> E_IN_3
 
 
-``T``, ``S``, ``dTdt``... are manipulated by OASIS under ``E_OUT_0``, ``E_OU_1``, ``E_IN_0``... respectively. Thus, finalize coupling configuration (step B) as follows:
+``wnd``, ``tair``, ``tau``... are manipulated by OASIS under ``E_OUT_0``, ``E_OUT_1``, ``E_IN_0``... respectively. Thus, finalize coupling configuration (step B) as follows:
 
 
 .. code-block :: Fortran
 
-    ! sending of sea temperature
-    ssnd(ntypinf,jps_t)%clname = 'E_OUT_0' ! OASIS name from Eophis log
-    ssnd(ntypinf,jps_t)%nlvl = 32          ! 32 depth levels
+         ! ssnd: Wind speed, Air Temperature, Specific humidity, Sea Surface Temperature, Sea level pressure
+         ssnd(ntypinf,jps_wnd)%clname =  'E_OUT_0'
+         ssnd(ntypinf,jps_tair)%clname = 'E_OUT_1'
+         ssnd(ntypinf,jps_sst)%clname =  'E_OUT_2'
+         ssnd(ntypinf,jps_hum)%clname =  'E_OUT_3'
+         ssnd(ntypinf,jps_slp)%clname =  'E_OUT_4'
 
-    ! sending of sea salinity
-    ssnd(ntypinf,jps_s)%clname = 'E_OUT_1'
-    ssnd(ntypinf,jps_s)%nlvl = 32
-    
-    ! sending of Stokes drift-x
-    ssnd(ntypinf,jps_stx)%clname = 'E_OUT_2'
-    ssnd(ntypinf,jps_stx)%nlvl = 32
+         ! srcv: Wind stress, latent heat, sensible heat, vaporization heat
+         srcv(ntypinf,jpr_tau)%clname = 'E_IN_0'
+         srcv(ntypinf,jpr_lat)%clname = 'E_IN_1'
+         srcv(ntypinf,jpr_sen)%clname = 'E_IN_2'
+         srcv(ntypinf,jpr_evp)%clname = 'E_IN_3'
 
-    ! sending of Stokes drift-y
-    !!  use jps_sty, E_OUT_3 and 32 levels
-
-    ! sending of surface heat flux
-    ssnd(ntypinf,jps_q)%clname = 'E_OUT_4'  ! 1 depth level by default
-
-    ! sending of wind stress-x
-    !! ...
-
-    ! sending of wind stress-y
-    !! ...
-
-    ! reception of temperature time derivative
-    srcv(ntypinf,jpr_dTdt)%clname = 'E_IN_0'
-    srcv(ntypinf,jpr_dTdt)%laction = .TRUE.
-    srcv(ntypinf,jpr_dTdt)%nlvl = 32
-
-    ! reception of salinity time derivative
-    !!  use jpr_dSdt, E_IN_1 and 32 levels (in srcv !!)
-
-
-Now we specify what values to send. Temperature and salinity arrays are in ``oce`` module. Heat flux and wind stresses come from ``sbc_oce``. We import them in ``infmod.f90`` header:
-
-.. code-block :: Fortran
-    
-    USE oce     ! to get ts array
-    USE sbc_oce ! to get qsr, qns, utau and vtau
-
-
-``infsnd`` is a list of arrays whose indexes correspond to IDs of fields to send (``jps_``). Fill them with imported fields (step C). Stokes drifts are set to zero since we do not have wave model:
+Now we specify what values to send in ``inferences()`` subroutine. ``infsnd`` is a list of arrays whose indexes correspond to IDs of fields to send (``jps_``). We assume that NEMO fields containing values to send have been passed as arguments. Thus, fill ``infsnd`` with corresponding arrays (step C):
 
 .. code-block :: Fortran
 
-    ! sea Temperature
-    infsnd(jps_t)%z3(:,:,1:ssnd(ntypinf,jps_t)%nlvl) = ts(:,:,1:ssnd(ntypinf,jps_t)%nlvl,jp_tem,Kmm)
-    !
-    ! sea Salinity
-    infsnd(jps_s)%z3(:,:,1:ssnd(ntypinf,jps_s)%nlvl) = ts(:,:,1:ssnd(ntypinf,jps_s)%nlvl,jp_sal,Kmm)
-    !
-    ! surface heat flux
-    infsnd(jps_q)%z3(:,:,ssnd(ntypinf,jps_q)%nlvl) = qsr(:,:) + qns(:,:)
-    !
-    ! wind stress
-    infsnd(jps_taux)%z3(:,:,ssnd(ntypinf,jps_taux)%nlvl) = utau(:,:)
-    infsnd(jps_tauy)%z3(:,:,ssnd(ntypinf,jps_tauy)%nlvl) = vtau(:,:)
-    !
-    ! Stokes Drift
-    infsnd(jps_stx)%z3(:,:,1:ssnd(ntypinf,jps_stx)%nlvl) = 0.0
-    infsnd(jps_sty)%z3(:,:,1:ssnd(ntypinf,jps_sty)%nlvl) = 0.0
+      ! ------  Prepare data to send ------
+      !
+      ! Wind speed
+      infsnd(jps_wnd)%z3(:,:,ssnd(ntypinf,jps_wnd)%nlvl) = wndm(:,:)
+      ! Air temperature
+      infsnd(jps_tair)%z3(:,:,ssnd(ntypinf,jps_tair)%nlvl) = tair(:,:)
+      ! SST - convert to Kelvin
+      infsnd(jps_sst)%z3(:,:,ssnd(ntypinf,jps_sst)%nlvl) = sst(:,:) + 273.15_wp
+      ! Specific humidity - convert to g/kg
+      infsnd(jps_hum)%z3(:,:,ssnd(ntypinf,jps_hum)%nlvl) = hum(:,:) * 1000._wp
+      ! Sea level pressure - convert to hPa
+      infsnd(jps_slp)%z3(:,:,ssnd(ntypinf,jps_slp)%nlvl) = slp(:,:) * 0.01_wp
 
 
-Sendings and receptions are already handled by this pre-defined communication module. Received fields are stored in ``infrcv``. It works like ``infsnd`` but with IDs of fields to receive (``jpr_``). Store results in ``dTdt`` and ``dSdt`` arrays and output them (step D):
+Sendings and receptions are already handled by this pre-defined communication module. Received fields are stored in ``infrcv``. It works like ``infsnd`` but with IDs of fields to receive (``jpr_``). Store results in the arrays we defined in ``inffld.F90`` (step D):
 
 .. code-block :: Fortran
 
-    ! Temperature and salinity time derivatives
-    dTdt(:,:,1:srcv(ntypinf,jpr_dTdt)%nlvl) = infrcv(jpr_dTdt)%z3(:,:,1:srcv(ntypinf,jpr_dTdt)%nlvl)
-    dSdt(:,:,1:srcv(ntypinf,jpr_dSdt)%nlvl) = infrcv(jpr_dSdt)%z3(:,:,1:srcv(ntypinf,jpr_dSdt)%nlvl)
-    CALL iom_put( 'inf_dTdt', dTdt(:,:,:) )
-    CALL iom_put( 'inf_dSdt', dSdt(:,:,:) )
+      ! ------ Distribute receptions  ------
+      !
+      ! Store latent, sensible, vaporization heat and wind stress
+      ext_latent(:,:)   = infrcv(jpr_lat)%z3(:,:,srcv(ntypinf,jpr_lat)%nlvl)
+      ext_sensible(:,:) = infrcv(jpr_sen)%z3(:,:,srcv(ntypinf,jpr_sen)%nlvl)
+      ext_taum(:,:)     = infrcv(jpr_tau)%z3(:,:,srcv(ntypinf,jpr_tau)%nlvl)
+      ext_evap(:,:)     = infrcv(jpr_evp)%z3(:,:,srcv(ntypinf,jpr_evp)%nlvl)
 
 
-Communication module is configured. Call it at the beginning of each time step in ``stpmlf.f90``:
+Communication module is configured. Import it in ``sbcblk.F90``:
 
 .. code-block :: bash
     
-    cp ~/morays_tutorial/nemo_v4.2.1/src/OCE/stpmlf.f90   ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/MY_SRC/
-    vi ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/MY_SRC/stpmlf.f90
+    cp ~/morays_tutorial/nemo_v4.2.1/src/OCE/SBC/sbcblk.F90   ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.ASFC/MY_SRC/
+    vi ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.ASFC/MY_SRC/sbcblk.F90
 
 .. code-block :: Fortran
 
-    167  CALL inferences ( kstp, Nbb, Nnn, Naa )
+    ! Line 44
+    44 USE inffld
+    45 USE infmod
 
-
-and use ``dTdt`` and ``dSdt`` for tracer advancement:
-
-.. code-block :: bash
-    
-    cp ~/morays_tutorial/nemo_v4.2.1/src/OCE/TRA/... ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/MY_SRC/
-    vi ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/MY_SRC/
+We call it after computation of NEMO bulk formula because all required fields are defined at this stage:
 
 .. code-block :: Fortran
 
-    167  CALL inferences ( kstp, Nbb, Nnn, Naa )
-
-        00 use inffld
-        ! ...
-        00   = dTdt(:,:,:)
-        00   = dSdt(:,:,:)
+    ! Line 820
+    CALL inferences( kt, SQRT(pwndi**2 + pwndj**2), ptair, pst, pssq, pslp )
 
 
-Finally build C1D_PAPA32.L22DNN:
+and we overwrite NEMO fluxes with results from Python model:
+
+.. code-block :: Fortran
+
+    ! Line 824
+    psen(:,:) = ext_sensible(:,:) * tmask(:,:,1)
+    plat(:,:) = ext_latent(:,:) * tmask(:,:,1)
+    taum(:,:) = ext_taum(:,:)  * tmask(:,:,1)
+    pevp(:,:) = -1. * MAX(ext_latent(:,:),0.0_wp) / ext_evap(:,:) * tmask(:,:,1)
+
+
+Finally build C1D_PAPA32.ASFC:
 
 .. code-block :: bash
 
     # Compile
     cd ~/morays_tutorial/nemo_v4.2.1/
-    ./makenemo -m "C1D_PAPA32_L22DNN_GCC" -r C1D_PAPA32.L22DNN -n C1D_PAPA32.L22DNN
+    ./makenemo -m "C1D_PAPA32_ASFC_GCC" -r C1D_PAPA32.ASFC
     
 
 
-5. Run C1D_PAPA32.L22DNN
-------------------------
+5. Run C1D_PAPA32.ASFC
+----------------------
 
-Complete C1D_PAPA32.L22DNN config with Eophis and L22DNN Python scripts:
+Complete C1D_PAPA32.ASFC config with Eophis and ASFC Python scripts:
 
 .. code-block :: bash
 
     # Get Python material
-    cp ~/morays_tutorial/L22DNN/*.py   ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/EXP00
+    cp ~/morays_tutorial/ASFC/ASFC/*.py   ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.ASFC/EXP00
 
 Copy ``namcouple`` as well, or re-execute Eophis in preproduction mode. Run NEMO-Eophis:
 
@@ -649,7 +610,7 @@ As for C1D_PAPA32, you should find some netcdf files. Use same scripts to plot r
 .. code-block:: bash
  
     # Get plotting scripts and references
-    cd ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/EXP00
+    cd ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.ASFC/EXP00
     ln -s ../../C1D_PAPA32/PLOTS/* .
  
     # Plot, you might need to exit container (and lima VM) to visualize figures
@@ -657,10 +618,12 @@ As for C1D_PAPA32, you should find some netcdf files. Use same scripts to plot r
     python3 ./plots_diff.py
     
     
+Try now to modify ASFC fluxes computation method in ``models.py`` and see the impacts on the results. See `ASFC documentation <https://github.com/NOCSurfaceProcesses/AirSeaFluxCode/blob/master/docs/Documentation.pdf>`_ for more help.
+
 
 Going further
 -------------
 
-You have seen the minimal steps to set up a hybrid ML-NEMO experiment in Morays framework. We invite you to read `Eophis documentation <https://eophis.readthedocs.io/en/latest/overview.html>`_ and `configuration guide for NEMO <https://morays-doc.readthedocs.io/en/latest/nemo.api_4.html>`_ to discover advanced coupling features.
+You have seen the minimal steps to set up a hybrid Python-NEMO experiment in Morays framework. We invite you to read `Eophis documentation <https://eophis.readthedocs.io/en/latest/overview.html>`_ and `configuration guide for NEMO <https://morays-doc.readthedocs.io/en/latest/nemo.api_4.html>`_ to discover advanced coupling features.
 
 If this tutorial helped you to build a new Morays experiment with NEMO, it would be greatly apreciated if you could `contribute to the Morays collection <https://morays-doc.readthedocs.io/en/latest/contribute.html>`_.
