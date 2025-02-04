@@ -77,7 +77,7 @@ or:
 Introduction
 ------------
 
-C1D_PAPA is a 1D column NEMO configuration used to isolate and study vertical processes. It models turbulent-mixing behaviour over 1 year at Ocean Station PAPA, located in the North Pacific Ocean. For the tutorial, we will use a slightly modified version of the test case in which the vertical grid is regurlaly discretized on 32 depth levels over 200m, denoted hereafter as C1D_PAPA32.
+C1D_PAPA is a 1D column NEMO configuration used to isolate and study vertical processes. It models turbulent-mixing behaviour over 1 year at Ocean Station PAPA, located in the North Pacific Ocean. For the tutorial, we will use a slightly modified version of the test case in which the vertical grid is regularly discretized on 32 depth levels over 200m, denoted hereafter as C1D_PAPA32.
 
 L22DNN takes place in the context of parameterizing vertical mixing in ocean surface boundary layer. The model takes vertical temperature, salinity and Stokes drift profiles, surface wind stress vector, and surface heat flux as inputs. Outputs of the model are the time derivatives due to turbulent mixing for temperature and salinity.
 
@@ -129,7 +129,7 @@ Build config:
     
     # Compile -- adapt arch file if you are not running Morays container
     cp cfgs/C1D_PAPA32/arch-C1D_PAPA32_GCC.fcm   arch/
-    ./makenemo -m "C1D_PAPA32_GCC" -r C1D_PAPA32 -n C1D_PAPA32
+    ./makenemo -m "C1D_PAPA32_GCC" -r C1D_PAPA32
     
     
 and run NEMO:
@@ -374,6 +374,7 @@ C1D_PAPA32.L22DNN models the same C1D_PAPA32 ocean circulation. Duplicate the ca
     # Copy C1D_PAPA32 material
     cp -r C1D_PAPA32/EXPREF   C1D_PAPA32.L22DNN/
     cp -r C1D_PAPA32/MY_SRC   C1D_PAPA32.L22DNN/
+    cp -r C1D_PAPA32/FORCING  C1D_PAPA32.L22DNN/
 
 and update experiment name in NEMO namelist:
 
@@ -408,7 +409,7 @@ OASIS and XIOS (compiled with OASIS) nmust be linked during NEMO compilation. Du
         %OASIS_HOME     /home/jdoe/oasis3-mct/BLD
         # ...
         %OASIS_INC      -I%OASIS_HOME/include -I%OASIS_HOME/build-shared/lib/cbindings
-        $OASIS_LIB      -L%OASIS_HOME/lib -loasis.cbind -lpsmile.MPI1 -lmct -lmpeu -lscrip
+        %OASIS_LIB      -L%OASIS_HOME/lib -loasis.cbind -lpsmile.MPI1 -lmct -lmpeu -lscrip
         # ...
         %USER_INC       %XIOS_INC %OASIS_INC %NCDF_INC
         %USER_LIB       %XIOS_LIB %OASIS_LIB %NCDF_LIB
@@ -439,15 +440,14 @@ We transfer Morays sources for NEMO_v4.2.1 OCE module to our case:
     cp ~/morays_tutorial/Patches-NEMO/NEMO_v4.2.1/OCE/*   ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/MY_SRC/
 
 
-
 Configure NEMO
 ~~~~~~~~~~~~~~
 
-Morays patch comes with a pre-defined communication module for Python that needs to be configured. Edit ``inffld.f90`` and allocate fields to store time derivatives returned by L22DNN:
+Morays patch comes with a pre-defined communication module for Python that needs to be configured. Edit ``inffld.F90`` and allocate fields to store time derivatives returned by L22DNN:
 
 .. code-block :: bash
 
-    vi ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/MY_SRC/inffld.f90
+    vi ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/MY_SRC/inffld.F90
 
 
 .. code-block :: Fortran
@@ -459,7 +459,7 @@ Morays patch comes with a pre-defined communication module for Python that needs
         ! Line 56
         56 DEALLOCATE( dTdt, dSdt  , STAT=ierr )
 
-Python communication module is in ``infmod.f90``. Create IDs for the fields to exchange (step A), order does not matter:
+Python communication module is in ``infmod.F90``. Create IDs for the fields to exchange (step A), order does not matter:
 
 .. code-block :: Fortran
 
@@ -547,7 +547,7 @@ First dimension of ``srcv`` and ``ssnd`` corresponds to module ID. Second dimens
     !!  use jpr_dSdt, E_IN_1 and 32 levels (in srcv !!)
 
 
-Now we specify what values to send. Temperature and salinity arrays are in ``oce`` module. Heat flux and wind stresses come from ``sbc_oce``. We import them in ``infmod.f90`` header:
+Now we specify what values to send. Temperature and salinity arrays are in ``oce`` module. Heat flux and wind stresses come from ``sbc_oce``. We import them in ``infmod.F90`` header:
 
 .. code-block :: Fortran
     
@@ -588,12 +588,12 @@ Sendings and receptions are already handled by this pre-defined communication mo
     CALL iom_put( 'inf_dSdt', dSdt(:,:,:) )
 
 
-Communication module is configured. Call it at the beginning of each time step in ``stpmlf.f90``:
+Communication module is configured. Call it at the beginning of each time step in ``stpmlf.F90``:
 
 .. code-block :: bash
     
-    cp ~/morays_tutorial/nemo_v4.2.1/src/OCE/stpmlf.f90   ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/MY_SRC/
-    vi ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/MY_SRC/stpmlf.f90
+    cp ~/morays_tutorial/nemo_v4.2.1/src/OCE/stpmlf.F90   ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/MY_SRC/
+    vi ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.L22DNN/MY_SRC/stpmlf.F90
 
 .. code-block :: Fortran
 
@@ -623,7 +623,7 @@ Finally build C1D_PAPA32.L22DNN:
 
     # Compile
     cd ~/morays_tutorial/nemo_v4.2.1/
-    ./makenemo -m "C1D_PAPA32_L22DNN_GCC" -r C1D_PAPA32.L22DNN -n C1D_PAPA32.L22DNN
+    ./makenemo -m "C1D_PAPA32_L22DNN_GCC" -r C1D_PAPA32.L22DNN
     
 
 
