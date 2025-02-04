@@ -154,6 +154,10 @@ You should find netcdf files ``C1D_PAPA32_1d_20100615_20110614_grid_<T,U,V,W>.nc
     python3 ./plots_diff.py
  
 
+.. image:: images/RES_C1D_PAPA32.png
+    :width: 750px
+    :align: center
+ 
  
 
 2. Run ASFC model
@@ -598,10 +602,11 @@ Complete C1D_PAPA32.ASFC config with Eophis and ASFC Python scripts:
     # Get Python material
     cp ~/morays_tutorial/ASFC/ASFC/*.py   ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.ASFC/EXP00
 
-Copy ``namcouple`` as well, or re-execute Eophis in preproduction mode. Run NEMO-Eophis:
+Copy ``namcouple`` as well, or re-execute Eophis preproduction in config. Run NEMO-Eophis:
 
 .. code-block :: bash
 
+    cd ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.ASFC/EXP00
     mpirun -np 1 ./nemo : -np 1 python3 ./main.py --exec prod
 
 
@@ -616,6 +621,11 @@ As for C1D_PAPA32, you should find some netcdf files. Use same scripts to plot r
     # Plot, you might need to exit container (and lima VM) to visualize figures
     python3 ./plots_res.py
     python3 ./plots_diff.py
+    
+    
+.. image:: images/RES_C1D_PAPA32.ASFC.png
+    :width: 750px
+    :align: center
     
     
 Try now to modify ASFC fluxes computation method in ``models.py`` and see the impacts on the results. See `ASFC documentation <https://github.com/NOCSurfaceProcesses/AirSeaFluxCode/blob/master/docs/Documentation.pdf>`_ for more help.
