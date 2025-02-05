@@ -68,7 +68,7 @@ or:
     # Download image
     wget https://github.com/morays-community/morays-doc/releases/download/containers/morays_env_${ARCH}.sif
 
-    # Run container
+    # Run container: should print " >>>> Welcome in Morays environment ! <<<< "
     apptainer run --writable-tmpfs --bind $(pwd):/home/jdoe/morays_tutorial morays_env_${ARCH}.sif
 
 
