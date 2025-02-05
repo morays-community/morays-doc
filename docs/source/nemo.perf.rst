@@ -7,7 +7,7 @@ Performances
 
 
 
-We present here the order of magnitude of performance and costs for a Morays experiment with NEMO. Assessment is performed  with the 1/4º global ocean circulation `NEMO-MLE_Fluxes <https://github.com/morays-community/NEMO-MLE_Fluxes>`_ test case, coupled with different submesoscale Mixed Layer Eddies closures. Only the first out of the 75 ocean grid levels is exchanged.
+We present here the order of magnitude of performance and costs for a Morays experiment with NEMO. Assessment is performed  with the 1/4º global ocean circulation `NEMO-eORCA025_MLE <https://github.com/morays-community/NEMO-eORCA025_MLE>`_ test case, coupled with different submesoscale Mixed Layer Eddies closures. Only the first out of the 75 ocean grid levels is exchanged.
 
 Number of CPU allocated to NEMO is fixed while number of CPU for the Python script varies. Results are shown for coupling with an analytical model, a ML model processed by the Python CPUs, and a ML model processed by GPUs (1 for 40 Python CPUs). Performances for a standard NEMO config without coupling are also shown as reference.
 

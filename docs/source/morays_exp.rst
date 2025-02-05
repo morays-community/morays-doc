@@ -15,19 +15,28 @@ To reproduce a Morays experiment, follow these tutorials:
 NEMO experiments
 ----------------
 
+NEMO-C1D_PAPA32
+~~~~~~~~~~~~~~~
+1D column Ocean Station PAPA NEMO test case coupled with bulk and turbulent mixing parameterizations: `NEMO-C1D_PAPA32 <https://github.com/morays-community/NEMO-C1D_PAPA32>`_
+
 NEMO-DINO
 ~~~~~~~~~
 Idealized NeverwOrld config coupled with different ML models: `NEMO-DINO <https://github.com/morays-community/NEMO-DINO>`_
 
 
-NEMO-Subgrid_Density
-~~~~~~~~~~~~~~~~~~~~
-1/4deg global ocean circulation with analytical subgrid-density closures: `NEMO-Subgrid_Density <https://github.com/morays-community/NEMO-Subgrid_Density>`_
+NEMO-ORCA1_AirSeaHeat
+~~~~~~~~~~~~~~~~~~~~~
+1º global ocean circulation with ML-based correction of air-sea heat fluxes: `NEMO-ORCA1_AirSeaHeat <https://github.com/morays-community/NEMO-ORCA1_AirSeaHeat>`_
 
 
-NEMO-MLE_Fluxes
-~~~~~~~~~~~~~~~
-1/4deg global ocean circulation with analytical and ML-based submesoscales Mixed Layer Eddies closures: `NEMO-MLE_Fluxes <https://github.com/morays-community/NEMO-MLE_Fluxes>`_
+NEMO-eORCA025_Subgrid_Density
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1/4º global ocean circulation with analytical subgrid-density closures: `NEMO-eORCA025_Subgrid_Density <https://github.com/morays-community/NEMO-eORCA025_MLE>`_
+
+
+NEMO-eORCA025_MLE
+~~~~~~~~~~~~~~~~~
+1/4º global ocean circulation with analytical and ML-based submesoscales Mixed Layer Eddies closures: `NEMO-eORCA025_MLE <https://github.com/morays-community/NEMO-eORCA025_MLE>`_
 
 
 

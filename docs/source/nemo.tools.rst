@@ -16,7 +16,7 @@ NEMO experiments (from Morays or not) often need to perform long simulation time
 
 However, DCM has not been designed to manage hybrid modeling environment with Python and Eophis material. `pyDCM <https://github.com/alexis-barge/pyDCM/tree/4.2.1_pyoasis?tab=readme-ov-file>`_ is an updated version of the DCM in which those missing features have been added. We invite you to read the pyDCM documentation for more details on how to use it.
 
-Some of the Morays use cases have been conducted with pyDCM (``NEMO-Subgrid_Density`` for instance).
+Some of the Morays use cases have been conducted with pyDCM (``NEMO-eORCA025_Subgrid_Density`` for instance).
 
 Additional material required by pyDCM are stored in experiments repositories in accordance with Morays template.
 
