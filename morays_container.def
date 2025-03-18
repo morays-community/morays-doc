@@ -1,0 +1,149 @@
+
+BootStrap: docker
+From: debian:bookworm-slim
+
+%labels
+   Author alexis.barge@proton.me
+
+%environment
+   export HOME=/home/jdoe
+   export PYLIB=$HOME/.local_python
+   export ARCH="$(uname -m)-linux-gnu"
+   export LD_LIBRARY_PATH=/usr/lib:/lib:$LD_LIBRARY_PATH
+
+%files
+   XIOS
+
+%post
+   # Paths
+   # -----
+   export HOME=/home/jdoe
+   export PYLIB=$HOME/.local_python
+   export ARCH="$(uname -m)-linux-gnu"
+   mkdir -p $HOME
+
+   # Dev essential, MPI, NETCDF, Python
+   # ----------------------------------
+   apt -y update
+   apt install -y build-essential git vim wget bash imagemagick liburi-perl \
+                  openmpi-bin libopenmpi-dev libnetcdff-dev libnetcdf-dev \
+                  python3.11 python3-venv pip
+
+   # Python environment
+   # ------------------
+   python3 -m venv $PYLIB
+   . .$PYLIB/bin/activate
+   pip install matplotlib numpy==1.24.4 xarray cmocean einops mpi4py==3.1.5 tflite-runtime
+   pip install torch==2.2.0 --index-url https://download.pytorch.org/whl/cpu
+
+   # Install eophis
+   # --------------
+   git clone --branch v1.0.1 https://github.com/meom-group/eophis $HOME/eophis
+   cd $HOME/eophis/
+   pip install .
+
+   # Install HDF5
+   # ------------
+   cd $HOME
+   wget -O $HOME/hdf5-1.14.5.tar.gz https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_5/downloads/hdf5-1.14.5.tar.gz
+   tar -xvf $HOME/hdf5-1.14.5.tar.gz
+   cd $HOME/hdf5-1.14.5
+   ./configure --enable-fortran  --enable-parallel --enable-hl --enable-shared --prefix=/usr/lib/$ARCH/
+   make
+   make install
+
+   # Install netcdf-c
+   # ----------------
+   cd $HOME
+   wget -O $HOME/netcdf_v4.7.3.tar.gz https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.7.3.tar.gz
+   tar -xvf $HOME/netcdf_v4.7.3.tar.gz
+   cd $HOME/netcdf-c-4.7.3
+   export CPPFLAGS=-I/usr/lib/$ARCH/include
+   export LDFLAGS="-Wl,-rpath,/usr/lib/$ARCH/lib -L/usr/lib/$ARCH/lib -lhdf5_hl -lhdf5"
+   export CC=mpicc
+   ./configure --enable-parallel-tests --enable-netcdf-4 --enable-shared --prefix=/usr/lib/$ARCH/
+   make
+   make install
+   
+   # Install netcdf-fortran
+   # ----------------------
+   cd $HOME
+   wget -O $HOME/netcdff_v4.5.2.tar.gz https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v4.5.2.tar.gz
+   tar -xvf $HOME/netcdff_v4.5.2.tar.gz
+   cd $HOME/netcdf-fortran-4.5.2
+   export CPPFLAGS=-I/usr/lib/$ARCH/include
+   export LDFLAGS="-Wl,-rpath,/usr/lib/$ARCH/lib -L/usr/lib/$ARCH/lib -lnetcdf -lhdf5_hl -lhdf5"
+   export FC='mpif90 -fallow-argument-mismatch'
+   ./configure --prefix=/usr/lib/$ARCH/ --enable-shared --enable-parallel-tests
+   make
+   make install
+
+   # Install OASIS
+   # -------------
+   git clone https://gitlab.com/cerfacs/oasis3-mct.git $HOME/oasis3-mct
+   cd $HOME/oasis3-mct/util/make_dir
+   git checkout OASIS3-MCT_5.0
+   echo "include $HOME/eophis/.github/workflows/make.gnu" > make.inc
+   make -f TopMakefileOasis3 pyoasis
+
+   # Install XIOS without OASIS
+   # --------------------------
+   cp -r /XIOS $HOME/XIOS
+   
+   rm $HOME/XIOS/arch/arch-GCC_LINUX.env
+   echo "export INC_DIR=/usr/lib/$ARCH/include" >> $HOME/XIOS/arch/arch-GCC_LINUX.env
+   echo "export LIB_DIR=/usr/lib/$ARCH/lib" >> $HOME/XIOS/arch/arch-GCC_LINUX.env
+   echo "export ZLIB_DIR=/usr/lib/" >> $HOME/XIOS/arch/arch-GCC_LINUX.env
+   echo "export OPENMPI_INC_DIR=/usr/lib/$ARCH/openmpi/include" >> $HOME/XIOS/arch/arch-GCC_LINUX.env
+   echo "export OPENMPI_LIB_DIR=/usr/lib/$ARCH/openmpi/lib" >> $HOME/XIOS/arch/arch-GCC_LINUX.env
+
+   rm $HOME/XIOS/arch/arch-GCC_LINUX.path
+   echo 'NETCDF_INCDIR="-I $INC_DIR"' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
+   echo 'NETCDF_LIBDIR="-L $LIB_DIR"' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
+   echo 'NETCDF_LIB="-lnetcdff -lnetcdf"' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
+   echo 'MPI_INCDIR="-I $OPENMPI_INC_DIR"' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
+   echo 'MPI_LIBDIR="-L $OPENMPI_LIB_DIR"' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
+   echo 'MPI_LIB="-lmpi"' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
+   echo 'HDF5_INCDIR="-I $INC_DIR"' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
+   echo 'HDF5_LIBDIR="-Wl,-rpath,$LIB_DIR -L$LIB_DIR -L $ZLIB_DIR"' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
+   echo 'HDF5_LIB="-lhdf5_hl -lhdf5 -lz"' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
+   echo 'BOOST_INCDIR="-I $BOOST_INC_DIR"' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
+   echo 'BOOST_LIBDIR="-L $BOOST_LIB_DIR"' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
+   echo 'BOOST_LIB=""' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
+   echo 'OASIS_ROOT="$HOME/oasis3-mct"' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
+   echo 'OASIS_INCDIR="-I${OASIS_ROOT}/BLD/build-shared/lib/psmile.MPI1"' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
+   echo 'OASIS_LIBDIR="-L${OASIS_ROOT}/BLD/lib"' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
+   echo 'OASIS_LIB="-lpsmile.MPI1 -lscrip -lmct -lmpeu -loasis.cbind"' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
+
+   cd $HOME/XIOS
+   ./make_xios --full --prod --arch GCC_LINUX
+
+   # Install XIOS with OASIS
+   # -----------------------
+   cp -r $HOME/XIOS $HOME/XIOS_OASIS
+   cd $HOME/XIOS_OASIS
+   ./make_xios --full --prod --arch GCC_LINUX --use_oasis oasis3_mct
+
+   # clean
+   # -----
+   cd $HOME/XIOS && rm -rf arch cfg doc extern generic_extern generic_testcase inputs scripts tools xios_test_suite ppsrc obj flags done etc Makefile arch.* Licence* bld.* *.svn
+   cd $HOME/XIOS_OASIS && rm -rf arch cfg doc extern generic_extern generic_testcase inputs scripts tools xios_test_suite ppsrc obj flags done etc Makefile arch.* Licence* bld.* *.svn
+   cd $HOME && rm -r $HOME/hdf5* $HOME/netcdf*
+   cd $HOME/oasis3-mct && rm -rf doc examples pyoasis/examples pyoasis/docs
+   pip uninstall -y eophis
+   rm -r $HOME/eophis
+   rm -rf $HOME/.cache
+   apt-get clean
+   rm -rf /var/lib/apt/lists/*
+
+   # Build bashrc
+   # ------------
+   echo "# Python Env\n############" >> ~/.bashrc
+   echo "source $PYLIB/bin/activate" >> ~/.bashrc
+   echo "source $HOME/oasis3-mct/BLD/python/init.sh" >> ~/.bashrc
+   echo "\n# Easier Life\n#############" >> ~/.bashrc
+   echo "alias ls='ls --color=auto'" >> ~/.bashrc
+   echo "alias grep='grep --color=auto -H'\n" >> ~/.bashrc
+   echo "\n# Start\n#######" >> ~/.bashrc
+   echo "echo '>>>> Welcome in Morays environment ! <<<<'" >> ~/.bashrc
+   echo "cd $HOME" >> ~/.bashrc
