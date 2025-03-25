@@ -30,9 +30,9 @@ NEMO-C1D_PAPA32_TurbMix
 1D column Ocean Station PAPA NEMO test case coupled with turbulent mixing parameterizations: `NEMO-C1D_PAPA32_TurbMix <https://github.com/morays-community/NEMO-C1D_PAPA32_TurbMix>`_
 
 
-NEMO-DINO
-~~~~~~~~~
-Idealized NeverwOrld config coupled with different ML models: `NEMO-DINO <https://github.com/morays-community/NEMO-DINO>`_
+NEMO-DINO_Subgrid_Momentum
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Idealized NeverwOrld config coupled with different subgrid momentum forcing: `NEMO-DINO <https://github.com/morays-community/NEMO-DINO_Subgrid_Momentum>`_
 
 
 NEMO-ORCA1_AirSeaHeat
@@ -42,7 +42,7 @@ NEMO-ORCA1_AirSeaHeat
 
 NEMO-eORCA025_Subgrid_Density
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-1/4º global ocean circulation with analytical subgrid-density closures: `NEMO-eORCA025_Subgrid_Density <https://github.com/morays-community/NEMO-eORCA025_MLE>`_
+1/4º global ocean circulation with analytical subgrid-density closures: `NEMO-eORCA025_Subgrid_Density <https://github.com/morays-community/NEMO-eORCA025_Subgrid_Density>`_
 
 
 NEMO-eORCA025_MLE
