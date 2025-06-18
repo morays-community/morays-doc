@@ -35,6 +35,11 @@ NEMO-DINO_Subgrid_Momentum
 Idealized NeverwOrld config coupled with different subgrid momentum forcing: `NEMO-DINO <https://github.com/morays-community/NEMO-DINO_Subgrid_Momentum>`_
 
 
+NEMO-ORCA2_MLE
+~~~~~~~~~~~~~~
+2º global ocean circulation with analytical subgrid-density closures: `NEMO-ORCA2_MLE <https://github.com/morays-community/NEMO-ORCA2_MLE>`_
+
+
 NEMO-ORCA1_AirSeaHeat
 ~~~~~~~~~~~~~~~~~~~~~
 1º global ocean circulation with ML-based correction of air-sea heat fluxes: `NEMO-ORCA1_AirSeaHeat <https://github.com/morays-community/NEMO-ORCA1_AirSeaHeat>`_
