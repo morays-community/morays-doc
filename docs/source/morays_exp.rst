@@ -39,6 +39,8 @@ NEMO-ORCA2_MLE
 ~~~~~~~~~~~~~~
 2º global ocean circulation with analytical subgrid-density closures: `NEMO-ORCA2_MLE <https://github.com/morays-community/NEMO-ORCA2_MLE>`_
 
+**>> Uses NEMO5**
+
 
 NEMO-ORCA1_AirSeaHeat
 ~~~~~~~~~~~~~~~~~~~~~
