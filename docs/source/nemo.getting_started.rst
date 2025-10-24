@@ -19,17 +19,17 @@ or:
 
 .. code-block :: bash
     
-    # Ubuntu
-    # ------
+    # For Ubuntu
     sudo apt update && sudo apt install -y software-properties-common
     sudo add-apt-repository -y ppa:apptainer/ppa
     sudo apt update && sudo apt install -y apptainer
     
-    # Debian (amd64 ONLY)
-    # -------------------
+    # For amd64 Debian
+    sudo apt update
+    sudo apt install -y wget
     cd /tmp
-    wget https://github.com/apptainer/apptainer/releases/download/v1.3.6/apptainer_1.3.6_amd64.deb
-    sudo apt install -y ./apptainer_1.3.6_amd64.deb
+    wget https://github.com/apptainer/apptainer/releases/download/v1.4.3/apptainer_1.4.3_amd64.deb
+    sudo apt install -y ./apptainer_1.4.3_amd64.deb
     
 .. warning :: For other Linux distributions, please refer to this `guide <https://github.com/apptainer/apptainer/blob/main/INSTALL.md>`_.
  
@@ -48,12 +48,9 @@ or:
     # IMPORTANT: type 'cd' to go in VM home, 'pwd' should return '/home/<your_name>.linux'
     cd
     
-    # NB1: copy files from VM to host
+    # NB: copy files from VM to host
     limactl cp apptainer:/path/to/file  /host/destination
-    
-    # NB2: remove VM on host after tutorial
-    limactl stop apptainer
-    rm -rf ~/.lima/apptainer
+
 
 **Run Morays container**
 
