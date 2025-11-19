@@ -6,29 +6,36 @@ NEMO4 for Morays
 
 Let's recall that a Morays experiment is an ocean simulation that exchanges fields with an external Python script through OASIS. The strategy is to deploy the OASIS interface in the Python side and configure the global coupling environment with help of the Eophis library.
 
-From this point, we consider that all the Python material is already well configured. See `Eophis documentation <https://eophis.readthedocs.io/en/latest/>`_ or this `tutorial <https://eophis.readthedocs.io/en/latest/tutorial.html>`_ for more details. What remains now is to configure the OASIS interface of NEMO in accordance with Eophis. This is described in this section.
+From this point, we consider that all the Python material is already well configured. See `Eophis documentation <https://eophis.readthedocs.io/en/latest/>`_ or this `tutorial <https://eophis.readthedocs.io/en/latest/tutorial.html>`_ for more details. What remains now is to configure the NEMO Python communication module in accordance with Eophis.
 
+
+.. note ::
+    - **Developer guide** describes how to build a NEMO4 communication module from scratch.
+
+    - **User guide** describes a provided ready-to-use communication module -- **recommended**.
+
+
+
+Developer guide
+---------------
+
+We describe here how to use the OASIS interface within NEMO4 to build a whole new module dedicated to external communication, here Python.
 
 
 Modified OASIS interface
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-Current NEMO4 releases do include an OASIS module. However, it is restricted for coupling NEMO with atmospheric models only. Modifications of the NEMO4 sources are required to make it usable for other coupling purposes.
+Current NEMO4 releases do include an OASIS module. However, it is restricted for coupling NEMO surface boundary condition only. Modifications of the NEMO4 sources are required to make it usable for other coupling purposes.
+
 
 Morays provides `patches <https://github.com/morays-community/Patches-NEMO/>`_ with the abovementionned modifications of the NEMO code. More details about modifications are available `here <https://github.com/morays-community/Patches-NEMO/blob/main/README.md>`_. As a user, you just need to copy them in the ``MY_SRC`` directory of a NEMO4 config.
 
 
 
-Developper\'s guide
-~~~~~~~~~~~~~~~~~~~
-
-We describe here how to use the OASIS interface in a new NEMO4 module dedicated to Python communication. Note that a ready-to-use communication module is provided with Morays patches, see next subsection to learn how to use it.
-
-
 Register a new module
-'''''''''''''''''''''
+~~~~~~~~~~~~~~~~~~~~~
 
-Flexibility of OASIS in NEMO relies on the fact that coupling properties of the fields to exchange are stored in meta-arrays ``ssnd`` and ``srcv`` defined in ``cpl_oasis3.F90``. A dimension has simply been added to those arrays to sort meta-data between all the other modules that are using the OASIS interface.
+Flexibility of OASIS in NEMO4 relies on the fact that coupling properties of the fields to exchange are stored in meta-arrays ``ssnd`` and ``srcv`` defined in ``cpl_oasis3.F90``. A dimension has simply been added to those arrays to sort meta-data between all the other modules that are using the OASIS interface.
 
 The first thing to do is to register your module ID in the ``cpl_oasis3.F90`` global parameters:
 
@@ -54,7 +61,7 @@ Each time a module calls the OASIS routines within NEMO, the ID of the calling m
 
 
 Define coupled fields
-'''''''''''''''''''''
+~~~~~~~~~~~~~~~~~~~~~
 
 As in many codes, your module must contain an initialization routine in which the coupling properties of the exchanged fields are defined. All initialization routines that use the OASIS interface must be called during the NEMO general initialization phase in ``nemogcm.F90``, after ``cpl_domain()`` and before ``cpl_define()``. For example:
 
@@ -144,7 +151,7 @@ Once ``ssnd`` and ``srcv`` have been correctly filled. Finalize fields registrat
 
 
 Send a field
-''''''''''''
+~~~~~~~~~~~~
 
 During a time iteration, a coupled field can be sent with this function:
 
@@ -157,7 +164,7 @@ During a time iteration, a coupled field can be sent with this function:
     ! REAL, DIMENSION(:,:,:) :: pdata  ! field to send (shape is (:,:,1) for 2D)
     ! INTEGER                :: kinfo  ! OAIS3 info argument
 
-The ``pdata`` shape must be equivalent to the NEMO longitude and latitude grid sizes with halos for the two first dimensions. The third dimension is compulsory even for 2D fields and must be at least equal to the ``nlvl`` value defined during initialization.
+The ``pdata`` shape must be equivalent to the NEMO longitude and latitude grid sizes **with halos** for the two first dimensions. The third dimension is compulsory even for 2D fields and must be at least equal to the ``nlvl`` value defined during initialization.
 
 .. code-block:: fortran
 
@@ -174,7 +181,7 @@ The ``pdata`` shape must be equivalent to the NEMO longitude and latitude grid s
 
 
 Receive a field
-'''''''''''''''
+~~~~~~~~~~~~~~~
 
 During a time iteration, a coupled field can be received with this function:
 
@@ -188,7 +195,7 @@ During a time iteration, a coupled field can be received with this function:
     ! REAL, DIMENSION(:,:,:) :: pdata  ! returned received field (shape is (:,:,1) for 2D)
     ! REAL, DIMENSION(:,:,:) :: pmask  ! coupling mask, optional
 
-As for sending, ``pdata`` shape must be equivalent to NEMO longitude and latitude grid sizes for the two first dimensions and ``nlvl`` for the third dimension.
+As for sending, ``pdata`` shape must be equivalent to NEMO longitude and latitude grid sizes **with halos** for the two first dimensions and ``nlvl`` for the third dimension.
 
 .. code-block:: fortran
 
@@ -206,13 +213,15 @@ As for sending, ``pdata`` shape must be equivalent to NEMO longitude and latitud
 
 
 
-Configure coupling in NEMO
----------------------------
-
-To facilitate the deployment, modification or development of a Morays experiment, Morays patches directly come with pre-defined communication modules named ``inffld.f90`` and ``infmod.f90``. This section describes how to configure them.
 
 
-.. note:: You are of course free to build your own external communication module with a more sophisticated use of the OASIS interface in NEMO.
+User guide
+----------
+
+To facilitate deployment or modification of a Morays experiment, `Morays patches <https://github.com/morays-community/Patches-NEMO/>`_ directly provide pre-defined communication modules named ``pycpl.f90`` and ``pyfld.f90``. This section describes how to use them.
+
+
+.. warning:: The pre-defined communication modules require Eophis version 1.1.0 or later to be used.
 
 
 The presented examples rely on the DINO.GZ21 test case. Purposes and behaviors of DINO.GZ21 are described in the NEMO **Getting started** section of this documentation. Let's resume what both entities are exchanging.
@@ -224,11 +233,18 @@ and to receive from GZ21 model:
     - two forcing fields ``u_f`` and ``v_f`` with the same dimensions
 
 
+**with corresponding Eophis exchange definition:**
 
-Coupled Fields
-~~~~~~~~~~~~~~
+.. code-block:: python
 
-``inffld.F90`` is dedicated to the definition of arrays containing the fields returned by the external Python script. It does not use the OASIS interface.
+    {'freq' : step, 'grd' : 'DINO_Grid', 'lvl' : nlvl, 'in' : ['u','v'], 'out' : ['u_f','v_f']}
+
+
+
+Python fields
+~~~~~~~~~~~~~
+
+Module ``pyfld.F90`` is dedicated to the definition of arrays containing the fields returned by the external Python script.
 
 
 .. code-block:: fortran
@@ -240,113 +256,87 @@ The advantage is that we just need to store the results exchanged and/or compute
 
 .. code-block:: fortran
 
-    USE inffld
+    USE pyfld
 
 
 Two functions to (de)allocate the arrays with the right grid size are present in the module and must be correctly set. For instance:
 
 .. code-block:: fortran
 
-   INTEGER FUNCTION inffld_alloc()
-      !!---------------------------------------------------------------------
-      !!                  ***  FUNCTION inffld_alloc  ***
-      !!---------------------------------------------------------------------
-      INTEGER :: ierr
-      !!---------------------------------------------------------------------
-      ierr = 0
+   SUBROUTINE init_python_fields()
+      !!----------------------------------------------------------------------
+      !!             ***  ROUTINE init_python_fields  ***
+      !!
+      !! ** Purpose :   Initialisation of the Python module
+      !!
+      !! ** Method  :   * Allocate arrays for Python fields
+      !!                * Configure Python coupling
+      !!----------------------------------------------------------------------
       !
-      ALLOCATE( ext_uf(jpi,jpj,jpk) , ext_vf(jpi,jpj,jpk)  , STAT=ierr )
-      inffld_alloc = ierr
+      ! Allocate fields
+      ALLOCATE( ext_uf(jpi,jpj,jpk) , ext_vf(jpi,jpj,jpk) )
       !
-   END FUNCTION
+      ! configure coupling
+      CALL init_python_coupling()
+      !
+   END SUBROUTINE init_python_fields
    
    
 .. code-block:: fortran
 
-   INTEGER FUNCTION inffld_dealloc()
-      !!---------------------------------------------------------------------
-      !!                  ***  FUNCTION inffld_dealloc  ***
-      !!---------------------------------------------------------------------
-      INTEGER :: ierr
-      !!---------------------------------------------------------------------
-      ierr = 0
+   SUBROUTINE finalize_python_fields()
+      !!----------------------------------------------------------------------
+      !!             ***  ROUTINE finalize_python_fields  ***
+      !!
+      !! ** Purpose :   Free memory used by Python module
+      !!
+      !! ** Method  :   * deallocate arrays for Python fields
+      !!                * deallocate Python coupling
+      !!----------------------------------------------------------------------
       !
-      DEALLOCATE( ext_uf , ext_vf  , STAT=ierr )
-      inffld_dealloc = ierr
+      ! Free memory
+      DEALLOCATE( ext_uf, ext_vf )
       !
-   END FUNCTION
+      ! terminate coupling environment
+      CALL finalize_python_coupling()
+      !
+   END SUBROUTINE finalize_python_fields
 
-They are automatically called during the communication module initialization and termination.
-
-
-
-
-Communication module
-~~~~~~~~~~~~~~~~~~~~
-
-``infmod.F90`` is the communication module that uses the OASIS interface to send ``u``, ``v``, ``mask_u``, ``mask_v`` and receive ``u_f``, ``v_f`` in DINO.GZ21. Its structure follows the one described in **Developper'\s guide** subsection.
-
-The communication module must be activated in first place by setting ``ln_inf`` to ``.TRUE.`` in the NEMO4 namelist. Then, define the IDs of sending and receiving fields in the global module section :
-
-.. code-block:: fortran
-
-   INTEGER, PARAMETER ::   jps_ssu = 1    ! u surface velocity
-   INTEGER, PARAMETER ::   jps_ssv = 2    ! v surface velocity
-   INTEGER, PARAMETER ::   jps_mu = 3    ! u mask
-   INTEGER, PARAMETER ::   jps_mv = 4    ! v mask
-   INTEGER, PARAMETER ::   jps_inf = 4   ! total number of sendings for inferences
-
-   INTEGER, PARAMETER ::   jpr_uf = 1    ! u subgrid forcing field
-   INTEGER, PARAMETER ::   jpr_vf = 2    ! v subgrid forcing field
-   INTEGER, PARAMETER ::   jpr_inf = 2   ! total number of inference receptions
-
-   INTEGER, PARAMETER ::   jpinf = MAX(jps_inf,jpr_inf) ! Maximum number of exchanges
-
-   TYPE( DYNARR ), SAVE, DIMENSION(jpinf) ::  infsnd, infrcv  ! sent/received inferences
-   
-   
-Fields attributes must be then defined with ``ssnd`` and ``srcv`` in the ``inferences_init()`` subroutine, as shown in the previous subsection.
+They are automatically called during NEMO4 initialization and termination.
 
 
-Sendings and receivings are performed in the ``inferences()`` subroutine. It takes the simulation time and time indexes as arguments. More variables may be passed through the subroutine, as more complex fields required by the external ML model.
+Exchanging fields
+~~~~~~~~~~~~~~~~~
 
-``inferences()`` uses two lists of arrays ``infsnd`` and ``infrcv`` to store the fields to pass through ``cpl_snd()`` and ``cpl_rcv()``. Fill them with what will be exchanged with OASIS, for instance with the U-grid surface velocity and mask:
-
-.. code-block:: fortran
-
-      ! Sea Surface U velocity
-      IF( ssnd(ntypinf,jps_ssu)%laction ) THEN
-         infsnd(jps_ssu)%z3(:,:,1:ssnd(ntypinf,jps_ssu)%nlvl) = puu(:,:,1:ssnd(ntypinf,jps_ssu)%nlvl,Kbb)
-      ENDIF
-      ! u-grid surface mask
-      IF( ssnd(ntypinf,jps_mu)%laction ) THEN
-          infsnd(jps_mu)%z3(:,:,1:ssnd(ntypinf,jps_mu)%nlvl) = umask(:,:,1:ssnd(ntypinf,jps_mu)%nlvl)
-      ENDIF
-
-
-All sendings and receptions are then performed, in that order. Received fields are stored in ``infrcv`` and may be recovered as in this example:
+Configuration of OASIS following Eophis definitions in NEMO4 is automatically handled by the ``pycpl.F90`` module. The latter simply provides two functions to send and receive fields in accordance with the Eophis framework:
 
 
 .. code-block:: fortran
 
-      IF( srcv(ntypinf,jpr_uf)%laction .AND. srcv(ntypinf,jpr_vf)%laction ) THEN
-         ! Store received external forcing fields
-         ext_uf(:,:,1:srcv(ntypinf,jpr_uf)%nlvl) = infrcv(jpr_uf)%z3(:,:,1:srcv(ntypinf,jpr_uf)%nlvl)
-         ext_vf(:,:,1:srcv(ntypinf,jpr_vf)%nlvl) = infrcv(jpr_vf)%z3(:,:,1:srcv(ntypinf,jpr_vf)%nlvl)
-
-         ! Output results
-         CALL iom_put( 'ext_uf', ext_uf(:,:,1) )
-         CALL iom_put( 'ext_vf', ext_vf(:,:,1) )
-
-         ! Apply forcing fields to RHS
-         puu(:,:,1:srcv(ntypinf,jpr_uf)%nlvl,Krhs) = puu(:,:,1:srcv(ntypinf,jpr_uf)%nlvl,Krhs) + ext_uf(:,:,1:srcv(ntypinf,jpr_uf)%nlvl)
-         pvv(:,:,1:srcv(ntypinf,jpr_vf)%nlvl,Krhs) = pvv(:,:,1:srcv(ntypinf,jpr_vf)%nlvl,Krhs) + ext_vf(:,:,1:srcv(ntypinf,jpr_vf)%nlvl)
-      ENDIF
+    CALL send_to_python(varname, to_send, kt)
+    ! CHAR                    :: varname  ! field name defined in Eophis
+    ! REAL                    :: to_send  ! array to send, 2D or 3D
+    ! INTEGER                 :: kt       ! time step
+    
+    # ---------------------------------------------------------------- #
+    ! Example to send velocity field uu in pipeline "u"
+    CALL send_to_python('u', uu(:,:,:,Kbb), kstp)
 
 
-Note that the received fields are directly added to the NEMO RHS that is passed as argument. This means that ``inferences()`` must be called at the right moment of the time integration. Here, it is done in ``stpmlf.F90``.
+.. code-block:: fortran
 
-.. note:: This communication module works fine but is a bit clumsy to our taste. It is planned for future work to propose a finer one with Morays patches.
+    CALL receive_from_python(varname, to_rcv, kt)
+    ! CHAR                    :: varname  ! field name defined in Eophis
+    ! REAL                    :: to_rcv   ! array that will receive data, 2D or 3D
+    ! INTEGER                 :: kt       ! time step
+    
+    # ---------------------------------------------------------------- #
+    ! Example to receive forcing term from pipeline "u_f" in ext_uf
+    CALL receive_from_python('u_f', ext_uf, kstp)
+
+
+Those can be used anywhere in NEMO by importing the ``pycpl`` module. For more convenience, it can be useful to gather all sendings and/or receivings in a same routine. For instance, ``stpmlf.F90`` calls ``inputs_gz21()`` and ``update_from_gz21()`` in ``pyfld.F90`` at different moments of time loop to take advantage of parallel execution of NEMO4 and the Python scripts. The former gather all sendings, and the latter gathers all receptions.
+
 
 
 Compile NEMO

@@ -214,7 +214,7 @@ The other informations listed in ``README`` are the software requirements:
     - **Run:** submission tools to manage the experiment execution
     - **Post-Process:** post-processing libraries and plotting tools
 
-In accordance with the ``README`` content, we must install *NEMO_v4.2.1*, *Eophis_v1.0.0* and GZ21 package. Other tools and scripts are already contained in the repository.
+In accordance with the ``README`` content, we must install *NEMO_v4.2.1*, *Eophis_v1.1.0* and GZ21 package. Other tools and scripts are already contained in the repository.
 
 .. code-block:: bash
 
@@ -222,10 +222,10 @@ In accordance with the ``README`` content, we must install *NEMO_v4.2.1*, *Eophi
     cd ~/morays_tutorial
     git clone --branch 4.2.1 https://forge.nemo-ocean.eu/nemo/nemo.git nemo_v4.2.1
     
-    # Clone and install Eophis_v1.0.0
+    # Clone and install Eophis_v1.1.0
     cd ~/morays_tutorial
-    git clone --branch v1.0.0 https://github.com/meom-group/eophis eophis_v1.0.0
-    cd eophis_v1.0.0
+    git clone --branch v1.1.0 https://github.com/meom-group/eophis eophis_v1.1.0
+    cd eophis_v1.1.0
     pip install .
     
     # README instructions for GZ21 package
@@ -452,10 +452,12 @@ Going further
 From now on, you have an usable deployed Morays experiment for NEMO. Do not hesitate to check out and deploy other test cases to get inspired.
 
 Here are the locations where you can play with:
-    - coupling: ``infmod.f90`` for NEMO side, ``main.py`` for Python side and global settings
-    - fields to exchange: ``stpmlf.f90`` and ``infmod.f90``
+    - global coupling settings: ``main.py``
+    - Fortran interface: functions ``send_to_python()`` , ``receive_from_python()`` from ``pycpl.F90``
+    - fields sent by NEMO: routine ``inputs_gz21()`` in ``pyfld.f90``
     - computation of forcing fields and ML model configuration: ``ml_models.py``
-    - use of forcing fields: ``infmod.f90`` and any module that imports ``inffld.f90``
+    - use of received forcing fields: routine ``update_from_gz21()`` in ``pyfld.f90``
+    - calling of abovementionned routines within NEMO: ``stpmlf.F90``
     - NEMO settings: namelists and xml files
  
 Next sections provide more details on how to configure the NEMO external communication module, and to create a Morays experiment for NEMO from scratch.

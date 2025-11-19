@@ -22,15 +22,6 @@ Additional material required by pyDCM are stored in experiments repositories in 
 
 
 
-
-Configure NEMO with Eophis
---------------------------
-
-.. warning :: Work in progress
-
-
-
-
 Hybrid CPU/GPU execution
 ------------------------
 

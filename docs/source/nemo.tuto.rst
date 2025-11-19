@@ -205,10 +205,10 @@ Time has come to install Eophis:
 
 .. code-block :: bash
 
-    # Clone and install Eophis_v1.0.1
+    # Clone and install Eophis_v1.1.0
     cd ~/morays_tutorial
-    git clone --branch v1.0.1 https://github.com/meom-group/eophis eophis_v1.0.1
-    cd eophis_v1.0.1
+    git clone --branch v1.0.1 https://github.com/meom-group/eophis eophis_v1.1.0
+    cd eophis_v1.1.0
     pip install .
 
 
@@ -294,7 +294,7 @@ Eophis preproduction script is ready to be executed:
 
     python3 ./main.py --exec preprod
 
-Three files have been created: Eophis logs ``eophis.out``, ``eophis.err``, and ``namcouple``.
+Four files have been created: Eophis logs ``eophis.out``, ``eophis.err``, OASIS namelist ``namcouple``, and Eophis Fortran namelist ``eophis_nml``.
 
 
 Connect models
@@ -434,122 +434,26 @@ We transfer Morays sources for NEMO_v4.2.1 OCE module to our case:
 Configure NEMO
 ~~~~~~~~~~~~~~
 
-Morays patch comes with a pre-defined communication module for Python that needs to be configured. Edit ``inffld.F90`` and allocate fields to store fields returned by ASFC:
+Morays patch comes with pre-defined Python communication modules ``pyfld.f90`` and ``pycpl.F90``. Edit ``pyfld.F90`` to allocate arrays where fields returned by ASFC will be stored:
 
 .. code-block :: bash
 
-    vi ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.ASFC/MY_SRC/inffld.F90
+    vi ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.ASFC/MY_SRC/pyfld.F90
 
 
 .. code-block :: Fortran
     
-        ! Line 25
+        ! Line 26
         REAL(wp), PUBLIC, ALLOCATABLE, SAVE, DIMENSION(:,:)  :: ext_sensible, ext_latent, ext_taum, ext_evap
-        ! Line 42
+        ! Line 46
         ALLOCATE( ext_taum(jpi,jpj), ext_latent(jpi,jpj), ext_sensible(jpi,jpj), ext_evap(jpi,jpj) , STAT=ierr )
-        ! Line 56
+        ! Line 65
         DEALLOCATE( ext_taum, ext_latent, ext_sensible, ext_evap  , STAT=ierr )
 
-Python communication module is in ``infmod.F90``. Create IDs for the fields to exchange (step A), order does not matter:
-
-.. code-block :: Fortran
-
-   ! Fields to send -- jps_###
-   INTEGER, PARAMETER ::   jps_wnd  = 1 ! Relative wind speed
-   INTEGER, PARAMETER ::   jps_tair = 2 ! Potential air temperature
-   INTEGER, PARAMETER ::   jps_sst  = 3 ! Sea surface temperature
-   INTEGER, PARAMETER ::   jps_hum  = 4 ! Specific humidity
-   INTEGER, PARAMETER ::   jps_slp  = 5 ! Sea level pressure
-   INTEGER, PARAMETER ::   jps_inf = 5  ! total number of sendings
-
-   ! Fields to receive -- jpr_###
-   INTEGER, PARAMETER ::   jpr_lat = 1   ! Latent heat
-   INTEGER, PARAMETER ::   jpr_sen = 2   ! Sensible heat
-   INTEGER, PARAMETER ::   jpr_evp = 3   ! Vaporization heat
-   INTEGER, PARAMETER ::   jpr_tau = 4   ! Wind stress
-   INTEGER, PARAMETER ::   jpr_inf = 4   ! total number of receptions
 
 
-Coupling properties for each field must be defined in ``inferences_init()`` subroutine. Let's focus on two of them that are initialized this way:
+Now import communication modules in ``sbcblk.F90`` where we will use them:
 
-.. code-block :: Fortran
-
-      ! Default properties for fields to receive
-      srcv(ntypinf,:)%nlvl = 1  ;  srcv(ntypinf,:)%clname = ''
-      
-      ! Default properties for fields to send
-      ssnd(ntypinf,:)%nlvl = 1  ;  ssnd(ntypinf,:)%clname = ''
-
-First dimension of ``srcv`` and ``ssnd`` corresponds to module ID. Second dimension takes field IDs. ``nlvl`` is the number of depth level for 3D coupling, and ``clname`` is the alias under which OASIS will manipulate the field. Since only the surface level is required for all fields, we can keep the default value for ``nlvl``. Aliases are available in Eophis preproduction log ``eophis.out``:
-
-.. code-block :: bash
-
-    cat ~/morays_tutorial/ASFC/ASFC/eophis.out
-        # [...]
-        -------- Tunnel TO_NEMO_FIELDS registered --------
-          namcouple variable names
-            Earth side:
-              - wnd -> E_OUT_0
-              - tair -> E_OUT_1
-              - sst -> E_OUT_2
-              - hum -> E_OUT_3
-              - slp -> E_OUT_4
-              - tau -> E_IN_0
-              - latent -> E_IN_1
-              - sensible -> E_IN_2
-              - evap -> E_IN_3
-
-
-``wnd``, ``tair``, ``tau``... are manipulated by OASIS under ``E_OUT_0``, ``E_OUT_1``, ``E_IN_0``... respectively. Thus, finalize coupling configuration (step B) as follows:
-
-
-.. code-block :: Fortran
-
-         ! ssnd: Wind speed, Air Temperature, Specific humidity, Sea Surface Temperature, Sea level pressure
-         ssnd(ntypinf,jps_wnd)%clname =  'E_OUT_0'
-         ssnd(ntypinf,jps_tair)%clname = 'E_OUT_1'
-         ssnd(ntypinf,jps_sst)%clname =  'E_OUT_2'
-         ssnd(ntypinf,jps_hum)%clname =  'E_OUT_3'
-         ssnd(ntypinf,jps_slp)%clname =  'E_OUT_4'
-
-         ! srcv: Wind stress, latent heat, sensible heat, vaporization heat
-         srcv(ntypinf,jpr_tau)%clname = 'E_IN_0'
-         srcv(ntypinf,jpr_lat)%clname = 'E_IN_1'
-         srcv(ntypinf,jpr_sen)%clname = 'E_IN_2'
-         srcv(ntypinf,jpr_evp)%clname = 'E_IN_3'
-
-Now we specify what values to send in ``inferences()`` subroutine. ``infsnd`` is a list of arrays whose indexes correspond to IDs of fields to send (``jps_``). We assume that NEMO fields containing values to send have been passed as arguments. Thus, fill ``infsnd`` with corresponding arrays (step C):
-
-.. code-block :: Fortran
-
-      ! ------  Prepare data to send ------
-      !
-      ! Wind speed
-      infsnd(jps_wnd)%z3(:,:,ssnd(ntypinf,jps_wnd)%nlvl) = wndm(:,:)
-      ! Air temperature
-      infsnd(jps_tair)%z3(:,:,ssnd(ntypinf,jps_tair)%nlvl) = tair(:,:)
-      ! SST - convert to Kelvin
-      infsnd(jps_sst)%z3(:,:,ssnd(ntypinf,jps_sst)%nlvl) = sst(:,:) + 273.15_wp
-      ! Specific humidity - convert to g/kg
-      infsnd(jps_hum)%z3(:,:,ssnd(ntypinf,jps_hum)%nlvl) = hum(:,:) * 1000._wp
-      ! Sea level pressure - convert to hPa
-      infsnd(jps_slp)%z3(:,:,ssnd(ntypinf,jps_slp)%nlvl) = slp(:,:) * 0.01_wp
-
-
-Sendings and receptions are already handled by this pre-defined communication module. Received fields are stored in ``infrcv``. It works like ``infsnd`` but with IDs of fields to receive (``jpr_``). Store results in the arrays we defined in ``inffld.F90`` (step D):
-
-.. code-block :: Fortran
-
-      ! ------ Distribute receptions  ------
-      !
-      ! Store latent, sensible, vaporization heat and wind stress
-      ext_latent(:,:)   = infrcv(jpr_lat)%z3(:,:,srcv(ntypinf,jpr_lat)%nlvl)
-      ext_sensible(:,:) = infrcv(jpr_sen)%z3(:,:,srcv(ntypinf,jpr_sen)%nlvl)
-      ext_taum(:,:)     = infrcv(jpr_tau)%z3(:,:,srcv(ntypinf,jpr_tau)%nlvl)
-      ext_evap(:,:)     = infrcv(jpr_evp)%z3(:,:,srcv(ntypinf,jpr_evp)%nlvl)
-
-
-Communication module is configured. Import it in ``sbcblk.F90``:
 
 .. code-block :: bash
     
@@ -559,18 +463,18 @@ Communication module is configured. Import it in ``sbcblk.F90``:
 .. code-block :: Fortran
 
     ! Line 44
-    44 USE inffld
-    45 USE infmod
-
-We call it after computation of NEMO bulk formula because all required fields are defined at this stage:
-
-.. code-block :: Fortran
-
-    ! Line 820
-    CALL inferences( kt, SQRT(pwndi**2 + pwndj**2), ptair, pst, pssq, pslp )
+    44 USE pyfld
+    45 USE pycpl
 
 
-and we overwrite NEMO fluxes with results from Python model:
+#####################################################################################
+
+[...]
+
+#####################################################################################
+
+
+and we overwrite NEMO fluxes with results from the Python model:
 
 .. code-block :: Fortran
 
@@ -601,7 +505,7 @@ Complete C1D_PAPA32.ASFC config with Eophis and ASFC Python scripts:
     # Get Python material
     cp ~/morays_tutorial/ASFC/ASFC/*.py   ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.ASFC/EXP00
 
-Copy ``namcouple`` as well, or re-execute Eophis preproduction in config. Run NEMO-Eophis:
+Copy ``namcouple`` and ``eophis_nml`` as well, or re-execute Eophis preproduction in config. Run NEMO-Eophis:
 
 .. code-block :: bash
 
