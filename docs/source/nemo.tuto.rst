@@ -345,7 +345,6 @@ Final step is to specify connexions between the exchanged data and W25. Connect 
 
         outputs= {}
         outputs['taux'], outputs['tauy'], outputs['Qs'], outputs['Ql'] = packed_res
-        return outputs
 
         return outputs
 
