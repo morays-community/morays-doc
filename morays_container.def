@@ -34,6 +34,7 @@ From: debian:bookworm-slim
    python3 -m venv $PYLIB
    . .$PYLIB/bin/activate
    pip install matplotlib numpy==1.24.4 xarray cmocean einops mpi4py==3.1.5 tflite-runtime
+   pip install scipy==1.12.0 tqdm==4.66.1 gsw==3.6.19
    pip install torch==2.2.0 --index-url https://download.pytorch.org/whl/cpu
 
    # Install eophis
