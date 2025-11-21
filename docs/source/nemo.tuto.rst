@@ -483,7 +483,7 @@ The functions in NEMO for sending or receiving arrays to or from Python in accor
     CALL send_to_python('uy', pwndj, kt)
     CALL send_to_python('tair', ptair - 273.15_wp, kt)
     CALL send_to_python('toce', pst, kt)
-    CALL send_to_python('q', pssq, kt)
+    CALL send_to_python('q', pqair, kt)
     CALL send_to_python('p', pslp, kt)
     
     CALL receive_from_python('taux', ext_taux, kt)
