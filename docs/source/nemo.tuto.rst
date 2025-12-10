@@ -102,7 +102,7 @@ The final experiment will execute the following steps:
 1. Run standard C1D_PAPA32
 --------------------------
 
-We start by running standard C1D_PAPA32 without W25. Get a copy of NEMO v4.2.1:
+We start by running standard C1D_PAPA32 without W25. In this case, air-sea fluxes are computed with NCAR bulk formula. Get a copy of NEMO v4.2.1:
 
 .. code-block:: bash
 
