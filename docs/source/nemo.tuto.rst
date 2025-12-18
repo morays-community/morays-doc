@@ -192,8 +192,7 @@ Edit ``~/morays_tutorial/W25/W25/models.py``, a function ``W25ann()`` taking num
         LH_std = LH.pred_var(X).detach().numpy().squeeze() ** 0.5
 
 
-
-Script ``models.py`` can be executed lonely with user-defined typical values as inputs (feel free to modify them). Run it to check that the model works correctly:
+Note that stochastic fluctuations are generated after this block of code. Script ``models.py`` can be executed lonely with user-defined typical values as inputs (feel free to modify them). Run it to check that the model works correctly:
 
 .. code-block :: bash
 
