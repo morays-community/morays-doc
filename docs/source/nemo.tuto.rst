@@ -184,12 +184,12 @@ Edit ``~/morays_tutorial/W25/W25/models.py``, a function ``W25ann()`` taking num
         X = torch.tensor(X)
 
         # Predict fluxes
-        M_mean = M.pred_mean(X)
-        M_std = M.pred_var(X) ** 0.5
-        SH_mean = SH.pred_mean(X)
-        SH_std = SH.pred_var(X) ** 0.5
-        LH_mean = LH.pred_mean(X)
-        LH_std = LH.pred_var(X) ** 0.5
+        M_mean = M.pred_mean(X).detach().numpy().squeeze()
+        M_std = M.pred_var(X).detach().numpy().squeeze() ** 0.5
+        SH_mean = SH.pred_mean(X).detach().numpy().squeeze()
+        SH_std = SH.pred_var(X).detach().numpy().squeeze() ** 0.5
+        LH_mean = LH.pred_mean(X).detach().numpy().squeeze()
+        LH_std = LH.pred_var(X).detach().numpy().squeeze() ** 0.5
 
 
 
