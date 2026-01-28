@@ -521,11 +521,12 @@ Complete C1D_PAPA32.W25 config with Eophis and W25 Python scripts:
     # Get Python material
     cp ~/morays_tutorial/W25/W25/*.py   ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/EXP00
 
-Copy ``namcouple`` and ``eophis_nml`` as well, or re-execute Eophis preproduction in config. Run NEMO-Eophis:
+Re-execute Eophis preproduction in config and run NEMO-Eophis:
 
 .. code-block :: bash
 
     cd ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/EXP00
+    python3 ./main.py --exec preprod
     mpirun -np 1 ./nemo : -np 1 python3 ./main.py --exec prod
 
 
