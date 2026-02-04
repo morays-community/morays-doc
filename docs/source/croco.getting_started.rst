@@ -74,8 +74,8 @@ XIOS is used by NEMO to write results. It must be compiled with the abovemention
 
     # Clone XIOS
     cd ~/
-    svn co http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS2/trunk xios_oasis_5.0
-    cd ~/xios_oasis_5.0/
+    git clone -b XIOS2 https://gitlab.in2p3.fr/ipsl/projets/xios-projects/xios.git XIOS_OASIS
+    cd ~/XIOS_OASIS/
 
 Edit your ``arch-<YOUR_MACHINE>.path`` file to include the OASIS libraries directories and bindings:
 
