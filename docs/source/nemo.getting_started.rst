@@ -76,7 +76,7 @@ DINO stands for `diabatic Neverworld2 <https://gmd.copernicus.org/articles/15/65
 
 The work of GZ21 takes place in the context of parameterizing the ocean subgrid momentum forcing with a ML model. The goal is to predict the mean and standard deviation of a Gaussian probability distribution at each grid cell. Those are intended to be used for a stochastic prediction of the subgrid forcing. We wish to use the GZ21 parameterization to enhance the solution of a DINO simulation. The model relies on a CNN that takes macroscale surface velocities as inputs and returns mean and deviation as outputs.
 
-Here is the difficulty: the CNN model is written with native Python libraries while NEMO is written in Fortran. Thus, an interface is required to make both to coexist and exchange data. Since NEMO has an OASIS interface, we can use the Eophis library to couple an external Python script that will contain the GZ21 model.
+Here is the difficulty: the CNN model is written with native Python libraries while NEMO is written in Fortran. Thus, an interface is required to make both to coexist and exchange data. Since NEMO has an OASIS3-MCT interface, we can use the Eophis library to couple an external Python script that will contain the GZ21 model.
 
 
 .. image:: images/NEMO_GZ21_XIOS.png
@@ -104,14 +104,14 @@ Every Morays experiments with NEMO require a couple of shared libraries. We quic
   
   
 
-Compile OASIS_v5.0
-~~~~~~~~~~~~~~~~~~
+Compile OASIS3-MCT_v5.0
+~~~~~~~~~~~~~~~~~~~~~~~
 
-OASIS is the coupling library on which both NEMO and Eophis rely to perform field exchanges. OASIS_v5.0 is the minimal required version and must be dynamically compiled. See `OASIS documentation <https://oasis.cerfacs.fr/en/documentation/>`_ for more details.
+OASIS3-MCT is the coupling library on which both NEMO and Eophis rely to perform field exchanges. OASIS3-MCT_v5.0 is the minimal required version and must be dynamically compiled. See `OASIS3-MCT documentation <https://oasis.cerfacs.fr/en/documentation/>`_ for more details.
 
 .. code-block:: bash
 
-    # Clone OASIS_v5.0
+    # Clone OASIS3-MCT_v5.0
     cd ~/
     git clone https://gitlab.com/cerfacs/oasis3-mct.git
     cd ~/oasis3-mct
@@ -152,7 +152,7 @@ Edit your own ``make.<YOUR_ARCH>`` file. Pay attention to the following importan
     libmct.so   libmpeu.so   liboasis.cbind.so   libpsmile.MPI1.so   libscrip.so
 
     
-Activate OASIS Python API. The best is to put this command in your ``bash_profile``:
+Activate OASIS3-MCT Python API. The best is to put this command in your ``bash_profile``:
 
 .. code-block :: bash
 
@@ -160,10 +160,10 @@ Activate OASIS Python API. The best is to put this command in your ``bash_profil
     
 
 
-Compile XIOS with OASIS
-~~~~~~~~~~~~~~~~~~~~~~~
+Compile XIOS with OASIS3-MCT
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-XIOS is used by NEMO to write results. It must be compiled with the abovementioned OASIS libraries. See `XIOS documentation <https://forge.ipsl.jussieu.fr/ioserver/wiki/documentation>`_ for more details about compilation of XIOS with OASIS.
+XIOS is used by NEMO to write results. It must be compiled with the abovementioned OASIS3-MCT libraries. See `XIOS documentation <https://forge.ipsl.jussieu.fr/ioserver/wiki/documentation>`_ for more details about compilation of XIOS with OASIS3-MCT.
 
 
 .. code-block:: bash
@@ -173,7 +173,7 @@ XIOS is used by NEMO to write results. It must be compiled with the abovemention
     git clone -b XIOS2 https://gitlab.in2p3.fr/ipsl/projets/xios-projects/xios.git XIOS_OASIS
     cd ~/XIOS_OASIS/
 
-Edit your ``arch-<YOUR_MACHINE>.path`` file to include the OASIS libraries directories and bindings:
+Edit your ``arch-<YOUR_MACHINE>.path`` file to include the OASIS3-MCT libraries directories and bindings:
 
 .. code-block:: bash
 
@@ -274,14 +274,14 @@ An architecture file is compulsory to compile NEMO. A template for the experimen
     cp arch-auto.fcm arch-X64_DINO_GZ21.fcm
     
 
-Regardless of the method you chose, be sure to have your architecture file copied in ``~/morays_tutorial/nemo_v4.2.1/arch/`` and to have the OASIS and XIOS paths corresponding to those compiled with OASIS_v5.0 libraries.
+Regardless of the method you chose, be sure to have your architecture file copied in ``~/morays_tutorial/nemo_v4.2.1/arch/`` and to have the OASIS3-MCT and XIOS paths corresponding to those compiled with OASIS3-MCT_v5.0 libraries.
 
 
 
 Morays patch
 ~~~~~~~~~~~~
 
-``README`` mentionned that the  NEMO sources must be patched with Morays sources. Those are the minimal NEMO sources modifications to set up a Morays experiment. They enable flexible external communication through the OASIS module. We can obtain them by cloning this repository:
+``README`` mentionned that the  NEMO sources must be patched with Morays sources. Those are the minimal NEMO sources modifications to set up a Morays experiment. They enable flexible external communication through the OASIS3-MCT module. We can obtain them by cloning this repository:
 
 .. code-block:: bash
 

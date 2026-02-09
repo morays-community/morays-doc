@@ -80,7 +80,7 @@ C1D_PAPA is a 1D column NEMO configuration used to isolate and study vertical pr
 
 The work of W25 takes place in the context of parameterizing air–sea fluxes with their statistically variable behavior, which is absent from deterministic bulk algorithms. The objective is to estimate the mean and variance of a stochastic process at each grid cell. These estimates are intended to be used for a stochastic prediction of momentum and heat fluxes at the ocean surface. We aim to use the W25 ML model to improve the results of a C1D_PAPA32 simulation. The model relies on an artificial neural network (ANN) that takes ocean temperature, air temperature, specific humidity, wind speed, and air pressure at ocean surface as inputs. It returns the mean and standard deviation for wind stress, latent and sensible heat fluxes.
 
-The ANN is written with native Python libraries while NEMO is written in Fortran. Since NEMO has an OASIS interface, we can use the Eophis library to couple an external Python script that will contain the W25 model.
+The ANN is written with native Python libraries while NEMO is written in Fortran. Since NEMO has an OASIS3-MCT interface, we can use the Eophis library to couple an external Python script that will contain the W25 model.
 
 
 
@@ -204,7 +204,7 @@ Note that stochastic fluctuations are generated after this block of code. Script
 
 .. note ::
 
-    We have now an operating W25 script. However, ``models.py`` does not possess an OASIS interface and cannot be coupled with NEMO. In the next sections, we will build the Eophis scripts and configure NEMO to set up the coupling.
+    We have now an operating W25 script. However, ``models.py`` does not possess an OASIS3-MCT interface and cannot be coupled with NEMO. In the next sections, we will build the Eophis scripts and configure NEMO to set up the coupling.
 
 
 
@@ -276,10 +276,10 @@ Create Tunnel object (step 2) with:
     to_nemo, = eophis.register_tunnels( tunnel_config )
 
 
-Generate OASIS material
-~~~~~~~~~~~~~~~~~~~~~~~
+Generate OASIS3-MCT material
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-OASIS material is generated with ``write_coupling_namelist()``, which requires total simulation time as argument. This information is available in NEMO namelist ``namelist_cfg``. The latter is read and returned by ``ocean_info()``:
+OASIS3-MCT material is generated with ``write_coupling_namelist()``, which requires total simulation time as argument. This information is available in NEMO namelist ``namelist_cfg``. The latter is read and returned by ``ocean_info()``:
 
 .. code-block :: python
 
@@ -292,7 +292,7 @@ Thus, get namelist parameters (step 3) with:
     step, it_end, it_0 = nemo_nml.get('rn_Dt','nn_itend','nn_it000')
     total_time = (it_end - it_0 + 1) * step
 
-and use them to write OASIS namelist (step 4):
+and use them to write OASIS3-MCT namelist (step 4):
 
 .. code-block :: python
 
@@ -304,13 +304,13 @@ Eophis preproduction script is ready to be executed:
 
     python3 ./main.py --exec preprod
 
-Four files have been created: Eophis logs ``eophis.out``, ``eophis.err``, OASIS namelist ``namcouple``, and Eophis Fortran namelist ``eophis_nml``.
+Four files have been created: Eophis logs ``eophis.out``, ``eophis.err``, OASIS3-MCT namelist ``namcouple``, and Eophis Fortran namelist ``eophis_nml``.
 
 
 Connect models
 ~~~~~~~~~~~~~~
 
-We complete function ``production()`` to drive exchanges all along the run. Since the Tunnel is already created, deploy the OASIS interface (step 5) with:
+We complete function ``production()`` to drive exchanges all along the run. Since the Tunnel is already created, deploy the OASIS3-MCT interface (step 5) with:
 
 .. code-block :: python
 
@@ -348,15 +348,15 @@ Final step is to specify connexions between the exchanged data and W25. Connect 
         return outputs
 
 
-Note that all these components describe only pipelines, identified by the field names. We will now configure NEMO in accordance with the coupling environment defined by Eophis. The objective is to choose which array will be passed through OASIS along these pipelines.
+Note that all these components describe only pipelines, identified by the field names. We will now configure NEMO in accordance with the coupling environment defined by Eophis. The objective is to choose which array will be passed through OASIS3-MCT along these pipelines.
 
 
 
 4. Build C1D_PAPA32.W25
 -----------------------
 
-OASIS-built NEMO
-~~~~~~~~~~~~~~~~
+OASIS3-MCT-built NEMO
+~~~~~~~~~~~~~~~~~~~~~
 
 C1D_PAPA32.W25 models the same C1D_PAPA32 ocean circulation. Duplicate the case:
 
@@ -382,7 +382,7 @@ and update experiment name in NEMO namelist:
         cn_exp      = "C1D_PAPA32.W25" !  experience name
     
     
-This configuration must be compatible with an OASIS build. OASIS interface in NEMO is activated by ``key_oasis3`` CPP key. We add it to those already used by C1D-PAPA32:
+This configuration must be compatible with an OASIS3-MCT build. OASIS3-MCT interface in NEMO is activated by ``key_oasis3`` CPP key. We add it to those already used by C1D-PAPA32:
 
 .. code-block:: bash
 
@@ -390,7 +390,7 @@ This configuration must be compatible with an OASIS build. OASIS interface in NE
     echo " bld::tool::fppkeys   key_xios key_linssh key_oasis3" >> ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/cpp_C1D_PAPA32.W25.fcm
 
 
-OASIS and XIOS (compiled with OASIS) must be linked during NEMO compilation. Duplicate C1D_PAPA32 arch file and include them:
+OASIS3-MCT and XIOS (compiled with OASIS3-MCT) must be linked during NEMO compilation. Duplicate C1D_PAPA32 arch file and include them:
 
 .. code-block :: bash
 
@@ -411,7 +411,7 @@ OASIS and XIOS (compiled with OASIS) must be linked during NEMO compilation. Dup
         %USER_LIB       %XIOS_LIB %OASIS_LIB %NCDF_LIB
 
 
-Finally configure XIOS to be aware of OASIS environment:
+Finally configure XIOS to be aware of OASIS3-MCT environment:
 
 .. code-block:: bash
 
@@ -420,7 +420,7 @@ Finally configure XIOS to be aware of OASIS environment:
         <variable id="using_oasis"               type="bool">true</variable>
 
 
-Minimal NEMO sources modifications are required to set up a hybrid Python-NEMO experiment. Those modifications are provided by Morays patch. It enables creation of independent OASIS modules. It can be obtained in this repository:
+Minimal NEMO sources modifications are required to set up a hybrid Python-NEMO experiment. Those modifications are provided by Morays patch. It enables creation of independent OASIS3-MCT modules. It can be obtained in this repository:
 
 
 .. code-block :: bash

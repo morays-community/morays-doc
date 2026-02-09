@@ -39,7 +39,7 @@ Every asynchronous cases exhibits a plateau straight after a discontinuity. It i
 Time costs
 ----------
  
-This figures shows the average percentage of a NEMO iteration taken by different steps in synchronous conditions for 2D case. Here, "NEMO" refers to the time taken by NEMO routines without coupling, "Python" is the time taken by the Python script to run the model, and "OASIS" refers to the time taken by OASIS to perform communications.
+This figures shows the average percentage of a NEMO iteration taken by different steps in synchronous conditions for 2D case. Here, "NEMO" refers to the time taken by NEMO routines without coupling, "Python" is the time taken by the Python script to run the model, and "OASIS" refers to the time taken by OASIS3-MCT to perform communications.
    
    
 .. image:: images/time_eORCA025.L75_2D.png

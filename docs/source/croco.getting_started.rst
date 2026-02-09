@@ -24,14 +24,14 @@ Introduction
 
 Every Morays experiments with CROCO require a couple of shared libraries. We quickly summarize the steps to install them.
 
-Compile OASIS_v5.0
-~~~~~~~~~~~~~~~~~~
+Compile OASIS3-MCT_v5.0
+~~~~~~~~~~~~~~~~~~~~~~~
 
-OASIS is the coupling library on which both NEMO and Eophis rely to perform field exchanges. OASIS_v5.0 is the minimal required version and must be dynamically compiled. See `OASIS documentation <https://oasis.cerfacs.fr/en/documentation/>`_ for more details.
+OASIS3-MCT is the coupling library on which both NEMO and Eophis rely to perform field exchanges. OASIS3-MCT_v5.0 is the minimal required version and must be dynamically compiled. See `OASIS3-MCT documentation <https://oasis.cerfacs.fr/en/documentation/>`_ for more details.
 
 .. code-block:: bash
 
-    # Clone OASIS_v5.0
+    # Clone OASIS3-MCT_v5.0
     cd ~/
     git clone https://gitlab.com/cerfacs/oasis3-mct.git
     cd ~/oasis3-mct
@@ -55,7 +55,7 @@ Edit your own ``make.<YOUR_MACHINE>`` file. Be sure to have the following flags 
     make -f TopMakefileOasis3 pyoasis
     
 
-.. note :: In the following, we will compile NEMO with OASIS. Just keep in mind where OASIS_v5.0 dynamic libraries are stored. Let's assume for the tutorial that they are at this location:
+.. note :: In the following, we will compile NEMO with OASIS3-MCT. Just keep in mind where OASIS3-MCT_v5.0 dynamic libraries are stored. Let's assume for the tutorial that they are at this location:
 
     .. code-block :: bash
     
@@ -67,7 +67,7 @@ Edit your own ``make.<YOUR_MACHINE>`` file. Be sure to have the following flags 
 Compile XIOS
 ~~~~~~~~~~~~
 
-XIOS is used by NEMO to write results. It must be compiled with the abovementioned OASIS libraries. See `XIOS documentation <https://forge.ipsl.jussieu.fr/ioserver/wiki/documentation>`_ for more details about compilation of XIOS with OASIS.
+XIOS is used by NEMO to write results. It must be compiled with the abovementioned OASIS3-MCT libraries. See `XIOS documentation <https://forge.ipsl.jussieu.fr/ioserver/wiki/documentation>`_ for more details about compilation of XIOS with OASIS3-MCT.
 
 
 .. code-block:: bash
@@ -77,7 +77,7 @@ XIOS is used by NEMO to write results. It must be compiled with the abovemention
     git clone -b XIOS2 https://gitlab.in2p3.fr/ipsl/projets/xios-projects/xios.git XIOS_OASIS
     cd ~/XIOS_OASIS/
 
-Edit your ``arch-<YOUR_MACHINE>.path`` file to include the OASIS libraries directories and bindings:
+Edit your ``arch-<YOUR_MACHINE>.path`` file to include the OASIS3-MCT libraries directories and bindings:
 
 .. code-block:: bash
 

@@ -33,7 +33,7 @@ Running a Python neural network on pure CPUs may take time. Despite it is not im
 
 
 
-This means that NEMO and the Python scripts will be executed on CPUs, which is desirable for the OASIS communications. In the Eophis script, exchanged fields are numpy arrays and are not GPU-compatible.
+This means that NEMO and the Python scripts will be executed on CPUs, which is desirable for the OASIS3-MCT communications. In the Eophis script, exchanged fields are numpy arrays and are not GPU-compatible.
 
 Thus, a typical pipeline inside the coupled model for hybrid execution would be:
     - convert received numpy arrays fields into a GPU format

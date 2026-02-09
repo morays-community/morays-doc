@@ -4,9 +4,9 @@ NEMO5 for Morays
 .. toctree::
    :maxdepth: 2
 
-Let's recall that a Morays experiment is an ocean simulation that exchanges fields with an external Python script through OASIS. The strategy is to deploy the OASIS interface in the Python side and configure the global coupling environment with help of the Eophis library.
+Let's recall that a Morays experiment is an ocean simulation that exchanges fields with an external Python script through OASIS3-MCT. The strategy is to deploy the OASIS3-MCT interface in the Python side and configure the global coupling environment with help of the Eophis library.
 
-From this point, we consider that all the Python material is already well configured. See `Eophis documentation <https://eophis.readthedocs.io/en/latest/>`_ or this `tutorial <https://eophis.readthedocs.io/en/latest/tutorial.html>`_ for more details. What remains now is to configure the OASIS interface of NEMO in accordance with Eophis. This is described in this section.
+From this point, we consider that all the Python material is already well configured. See `Eophis documentation <https://eophis.readthedocs.io/en/latest/>`_ or this `tutorial <https://eophis.readthedocs.io/en/latest/tutorial.html>`_ for more details. What remains now is to configure the OASIS3-MCT interface of NEMO in accordance with Eophis. This is described in this section.
 
 
 .. important:: `NEMO-ORCA2_MLE <https://github.com/morays-community/NEMO-ORCA2_MLE>`_ experiment uses NEMO5.
@@ -21,13 +21,13 @@ From this point, we consider that all the Python material is already well config
 Developer guide
 ---------------
 
-Section **NEMO4 for Morays** explains that NEMO4 needs modifications from `Morays patches <https://github.com/morays-community/Patches-NEMO/>`_ to enable use of OASIS for new coupling modules. This is not required anymore in NEMO5 since modifications have been integrated with the release. However, modifications are slightly different compared to NEMO4. We describe here how to use the modified OASIS interface to create a new NEMO5 module dedicated to Python communication.
+Section **NEMO4 for Morays** explains that NEMO4 needs modifications from `Morays patches <https://github.com/morays-community/Patches-NEMO/>`_ to enable use of OASIS3-MCT for new coupling modules. This is not required anymore in NEMO5 since modifications have been integrated with the release. However, modifications are slightly different compared to NEMO4. We describe here how to use the modified OASIS3-MCT interface to create a new NEMO5 module dedicated to Python communication.
 
 
-Modified OASIS interface
-~~~~~~~~~~~~~~~~~~~~~~~~
+Modified OASIS3-MCT interface
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Coupling properties of the fields to send and receive are stored in ``ssnd`` and ``srcv`` arrays, respectively. Flexibility of OASIS in NEMO5 relies on an extra dimension in ``ssnd`` and ``srcv`` to sort coupling fields properties between the modules that are using the OASIS interface.
+Coupling properties of the fields to send and receive are stored in ``ssnd`` and ``srcv`` arrays, respectively. Flexibility of OASIS3-MCT in NEMO5 relies on an extra dimension in ``ssnd`` and ``srcv`` to sort coupling fields properties between the modules that are using the OASIS3-MCT interface.
 
 However, some modules will manipulate more fields than others and, in some configuration, not all modules might be used. To optimize memory, ``ssnd`` and ``srcv`` are now variables that allows to create batches of coupling properties arrays. This way, it is possible to allocate different array sizes according to the modules. For example:
 
@@ -38,7 +38,7 @@ However, some modules will manipulate more fields than others and, in some confi
     ssnd( mod_ID_2 )%fld( field_ID_3 )%field_property_3
 
 
-- First level dimension of ``ssnd / srcv`` corresponds to module IDs. It is automatically allocated if OASIS key is activated.
+- First level dimension of ``ssnd / srcv`` corresponds to module IDs. It is automatically allocated if OASIS3-MCT key is activated.
 
 - Second level dimension corresponds to IDs of coupled fields you wish the module to manage. This dimension is not allocated by default to save memory.
 
@@ -61,7 +61,7 @@ In this example, two modules are registered:
     2. EXT module used in Morays framework to couple Python script
 
 
-Each time a module calls the OASIS routines within NEMO, the ID of the calling module must be passed as argument. Set an ID for your new module and create it. Then, import the OASIS module:
+Each time a module calls the OASIS3-MCT routines within NEMO, the ID of the calling module must be passed as argument. Set an ID for your new module and create it. Then, import the OASIS3-MCT module:
 
 .. code-block :: fortran
 
@@ -72,7 +72,7 @@ Each time a module calls the OASIS routines within NEMO, the ID of the calling m
 Define coupled fields
 ~~~~~~~~~~~~~~~~~~~~~
 
-As in many codes, your module must contain an initialization routine in which the coupling properties of the exchanged fields are defined. All initialization routines that use the OASIS interface must be called during the NEMO general initialization phase in ``nemogcm.F90``, after ``cpl_domain()`` and before ``cpl_define()``. For example:
+As in many codes, your module must contain an initialization routine in which the coupling properties of the exchanged fields are defined. All initialization routines that use the OASIS3-MCT interface must be called during the NEMO general initialization phase in ``nemogcm.F90``, after ``cpl_domain()`` and before ``cpl_define()``. For example:
 
 
 .. code-block:: fortran
@@ -113,7 +113,7 @@ Each identified field in the second-level array has a list of attributes to fill
     END TYPE FLD_CPL
 
 
-Longitude and latitude sizes of the field do not need to be specified. It is automatically done during the initialization of the OASIS environment. Exchange frequencies do not need to be specified either since they are managed by Eophis.
+Longitude and latitude sizes of the field do not need to be specified. It is automatically done during the initialization of the OASIS3-MCT environment. Exchange frequencies do not need to be specified either since they are managed by Eophis.
 
 For instance, here are the properties for two variables ``u`` and ``u_f`` whose IDs are ``jps_ssu`` and ``jpr_uf``. They are defined in the communication module whose ID is ``nmodext``.
 
@@ -137,9 +137,9 @@ For instance, here are the properties for two variables ``u`` and ``u_f`` whose 
     srcv( nmodext )%fld( jpr_uf )%clgrid = 'U'
 
 
-The attribute ``clname`` corresponds to the alias that OASIS uses to perform the communications. ``u_f`` is manipulated by OASIS under ``E_IN_0`` from the NEMO side and under another name from the Python side. Those aliases are used in the OASIS namelist. ``clname`` must absolutely be in accordance with the content of the OASIS namelist.
+The attribute ``clname`` corresponds to the alias that OASIS3-MCT uses to perform the communications. ``u_f`` is manipulated by OASIS3-MCT under ``E_IN_0`` from the NEMO side and under another name from the Python side. Those aliases are used in the OASIS3-MCT namelist. ``clname`` must absolutely be in accordance with the content of the OASIS3-MCT namelist.
 
-.. note:: Eophis provides useful `tools <https://eophis.readthedocs.io/en/latest/usage.html#oasis-namcouple>`_ to know and manipulate OASIS aliases.
+.. note:: Eophis provides useful `tools <https://eophis.readthedocs.io/en/latest/usage.html#oasis-namcouple>`_ to know and manipulate OASIS3-MCT aliases.
 
 
 Once ``ssnd`` and ``srcv`` have been correctly filled. Finalize fields registration with:
@@ -316,7 +316,7 @@ They are automatically called during NEMO4 initialization and termination.
 Exchanging fields
 ~~~~~~~~~~~~~~~~~
 
-Configuration of OASIS following Eophis definitions in NEMO4 is automatically handled by the ``pycpl.F90`` module. The latter simply provides two functions to send and receive fields in accordance with the Eophis framework:
+Configuration of OASIS3-MCT following Eophis definitions in NEMO4 is automatically handled by the ``pycpl.F90`` module. The latter simply provides two functions to send and receive fields in accordance with the Eophis framework:
 
 
 .. code-block:: fortran
@@ -349,4 +349,4 @@ Those can be used anywhere in NEMO by importing the ``pycpl`` module. For more c
 Compile NEMO
 ------------
 
-After configurating the communication module, NEMO must be compiled with active *key_oasis3* CPP key and OASIS_v5.0 (see this `guide <https://morays-doc.readthedocs.io/en/latest/nemo.getting_started.html#morays-environment>`_).
+After configurating the communication module, NEMO must be compiled with active *key_oasis3* CPP key and OASIS3-MCT_v5.0 (see this `guide <https://morays-doc.readthedocs.io/en/latest/nemo.getting_started.html#morays-environment>`_).
