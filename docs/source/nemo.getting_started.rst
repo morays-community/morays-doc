@@ -66,7 +66,7 @@ or:
     wget https://github.com/morays-community/morays-doc/releases/download/containers/morays_env_${ARCH}.sif
 
     # Run container: should print " >>>> Welcome in Morays environment ! <<<< "
-    apptainer run --writable-tmpfs --bind $(pwd):/home/jdoe/morays_tutorial morays_env_${ARCH}.sif
+    apptainer run --writable-tmpfs --bind $(pwd):/home/jdoe/to_host morays_env_${ARCH}.sif
 
 
 Introduction
@@ -202,8 +202,8 @@ Now that we have set up the common environment for all Morays experiments, we ne
 
 .. code-block:: bash
 
-    mkdir -p ~/morays_tutorial
-    cd ~/morays_tutorial
+    mkdir -p ~/to_host
+    cd ~/to_host
     git clone https://github.com/morays-community/NEMO-DINO_Subgrid_Momentum.git
 
 The repository contains a ``README`` with informations about experiment context and motivations.
@@ -219,17 +219,17 @@ In accordance with the ``README`` content, we must install *NEMO_v4.2.1*, *Eophi
 .. code-block:: bash
 
     # Clone NEMO_v4.2.1
-    cd ~/morays_tutorial
+    cd ~/to_host
     git clone --branch 4.2.1 https://forge.nemo-ocean.eu/nemo/nemo.git nemo_v4.2.1
     
     # Clone and install Eophis_v1.1.0
-    cd ~/morays_tutorial
+    cd ~/to_host
     git clone --branch v1.1.0 https://github.com/meom-group/eophis eophis_v1.1.0
     cd eophis_v1.1.0
     pip install .
     
     # README instructions for GZ21 package
-    cd ~/morays_tutorial/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/INFERENCES/gz21_ocean_momentum
+    cd ~/to_host/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/INFERENCES/gz21_ocean_momentum
     pip install -e .
     
     
@@ -237,7 +237,7 @@ We will now browse the directories of the ``DINO_Subgrid_Momentum.GZ21`` experim
 
 .. code-block:: bash
 
-    ls ~/morays_tutorial/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/
+    ls ~/to_host/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/
     CONFIG  INFERENCES  POST-PROCESS  RES  RUN
 
 
@@ -251,9 +251,9 @@ This directory contains the material to compile NEMO. Since the **Compilation** 
 .. code-block:: bash
 
     # Create NEMO test case
-    echo "DINO_GZ21 OCE" >> ~/morays_tutorial/nemo_v4.2.1/tests/work_cfgs.txt
-    mkdir -p ~/morays_tutorial/nemo_v4.2.1/tests/DINO_GZ21/EXPREF
-    mkdir -p ~/morays_tutorial/nemo_v4.2.1/tests/DINO_GZ21/MY_SRC
+    echo "DINO_GZ21 OCE" >> ~/to_host/nemo_v4.2.1/tests/work_cfgs.txt
+    mkdir -p ~/to_host/nemo_v4.2.1/tests/DINO_GZ21/EXPREF
+    mkdir -p ~/to_host/nemo_v4.2.1/tests/DINO_GZ21/MY_SRC
 
 
 A list of active CPP keys is given as material in the CONFIG directory:
@@ -261,7 +261,7 @@ A list of active CPP keys is given as material in the CONFIG directory:
 .. code-block:: bash
 
     # Copy CPP keys
-    cp ~/morays_tutorial/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/CONFIG/cpp_DINO_GZ21.fcm   ~/morays_tutorial/nemo_v4.2.1/tests/DINO_GZ21/
+    cp ~/to_host/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/CONFIG/cpp_DINO_GZ21.fcm   ~/to_host/nemo_v4.2.1/tests/DINO_GZ21/
 
 
 
@@ -269,12 +269,12 @@ An architecture file is compulsory to compile NEMO. A template for the experimen
 
 .. code-block:: bash
 
-    cd ~/morays_tutorial/nemo_v4.2.1/arch
+    cd ~/to_host/nemo_v4.2.1/arch
     ./build_arch-auto.sh
     cp arch-auto.fcm arch-X64_DINO_GZ21.fcm
     
 
-Regardless of the method you chose, be sure to have your architecture file copied in ``~/morays_tutorial/nemo_v4.2.1/arch/`` and to have the OASIS3-MCT and XIOS paths corresponding to those compiled with OASIS3-MCT_v5.0 libraries.
+Regardless of the method you chose, be sure to have your architecture file copied in ``~/to_host/nemo_v4.2.1/arch/`` and to have the OASIS3-MCT and XIOS paths corresponding to those compiled with OASIS3-MCT_v5.0 libraries.
 
 
 
@@ -285,7 +285,7 @@ Morays patch
 
 .. code-block:: bash
 
-    cd ~/morays_tutorial
+    cd ~/to_host
     git clone https://github.com/morays-community/Patches-NEMO.git
 
 
@@ -294,7 +294,7 @@ We transfer the Morays sources for NEMO_v4.2.1 to our custom test case. Only the
 .. code-block:: bash
 
     # Copy Morays sources
-    cp ~/morays_tutorial/Patches-NEMO/NEMO_v4.2.1/OCE/*   ~/morays_tutorial/nemo_v4.2.1/tests/DINO_GZ21/MY_SRC/
+    cp ~/to_host/Patches-NEMO/NEMO_v4.2.1/OCE/*   ~/to_host/nemo_v4.2.1/tests/DINO_GZ21/MY_SRC/
 
 
 
@@ -307,7 +307,7 @@ Experiment patch
 .. code-block:: bash
 
     # Copy experiment sources
-    cp ~/morays_tutorial/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/CONFIG/my_src/*   ~/morays_tutorial/nemo_v4.2.1/tests/DINO_GZ21/MY_SRC/
+    cp ~/to_host/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/CONFIG/my_src/*   ~/to_host/nemo_v4.2.1/tests/DINO_GZ21/MY_SRC/
 
 
 
@@ -320,15 +320,15 @@ This directory contains all the production material, such as XIOS configuration 
 .. code-block:: bash
     
     # Copy xml files and namelists
-    cp ~/morays_tutorial/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/RUN/NAMELISTS/*   ~/morays_tutorial/nemo_v4.2.1/tests/DINO_GZ21/EXPREF/
-    cp ~/morays_tutorial/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/RUN/XML/*   ~/morays_tutorial/nemo_v4.2.1/tests/DINO_GZ21/EXPREF/
+    cp ~/to_host/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/RUN/NAMELISTS/*   ~/to_host/nemo_v4.2.1/tests/DINO_GZ21/EXPREF/
+    cp ~/to_host/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/RUN/XML/*   ~/to_host/nemo_v4.2.1/tests/DINO_GZ21/EXPREF/
 
 
 We have everything we need to compile NEMO:
 
 .. code-block:: bash
 
-    cd ~/morays_tutorial/nemo_v4.2.1
+    cd ~/to_host/nemo_v4.2.1
     ./makenemo -m "X64_DINO_GZ21_GCC" -a DINO_GZ21 -n "MY_DINO_GZ21" -j 8
 
 
@@ -336,7 +336,7 @@ In RUN directory is also contained the execution material for the experiment. Ex
 
 .. code-block:: bash
     
-    cp ~/morays_tutorial/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/RUN/job.ksh   ~/morays_tutorial/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
+    cp ~/to_host/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/RUN/job.ksh   ~/to_host/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
 
 
 Script ``job.ksh`` assumes that NEMO will run on a HPC system via a SBATCH scheduler. Adapt script content or remove SBATCH header if necessary.
@@ -351,21 +351,21 @@ This directory contains the Python scripts for hybrid modeling. It also includes
 
 .. code-block:: bash
 
-    cp ~/morays_tutorial/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/INFERENCES/*.py   ~/morays_tutorial/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
+    cp ~/to_host/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/INFERENCES/*.py   ~/to_host/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
     
     
 Model weights are in the folder of the same name. For this tutorial, we will use those:
     
 .. code-block:: bash
 
-    cp ~/morays_tutorial/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/INFERENCES/weights/gz21_huggingface/low-resolution/files/trained_model.pth   ~/morays_tutorial/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
+    cp ~/to_host/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/INFERENCES/weights/gz21_huggingface/low-resolution/files/trained_model.pth   ~/to_host/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
 
 
 We already installed GZ21 package in section **2. Experiment environment**. It may be tested by running ``ml_models.py`` as a standalone script:
 
 .. code-block:: bash
 
-    cd ~/morays_tutorial/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/INFERENCES/
+    cd ~/to_host/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/INFERENCES/
     python3 ./ml_models.py
     # Should print "Test successful"
         
@@ -378,7 +378,7 @@ Everything is ready to execute the hybrid experiment. Submit the run with ``job.
 
 .. code-block:: bash
 
-    cd ~/morays_tutorial/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
+    cd ~/to_host/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
 
     # clean working directory
     touch namcouple
@@ -430,12 +430,12 @@ POST-PROCESS directory contains material and/or scripts to compute and plot resu
 .. code-block:: bash
 
     # install dependencies, if necessary
-    cd ~/morays_tutorial/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/POST-PROCESS/
+    cd ~/to_host/NEMO-DINO_Subgrid_Momentum/DINO_Subgrid_Momentum.GZ21/POST-PROCESS/
     pip install -r requirements.txt
-    cp plots_res.py  ~/morays_tutorial/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
+    cp plots_res.py  ~/to_host/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
     
     # Plot, you might need to exit container (and lima VM) to visualize figures
-    cd ~/morays_tutorial/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
+    cd ~/to_host/nemo_v4.2.1/tests/MY_DINO_GZ21/EXP00/
     python3 ./plots_res.py
 
 

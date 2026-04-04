@@ -7,19 +7,20 @@ From: debian:bookworm-slim
 
 %environment
    export HOME=/home/jdoe
-   export PYLIB=$HOME/.local_python
+   export PYLOC=$HOME/.morays_venv
+   export PYHOST=$HOME/to_host/host_venv
    export ARCH="$(uname -m)-linux-gnu"
    export LD_LIBRARY_PATH=/usr/lib:/lib:$LD_LIBRARY_PATH
-
-%files
-   XIOS
+   export PYTHONPATH=${PYLOC}/lib/python3.11/site-packages:$PYTHONPATH
 
 %post
    # Paths
    # -----
    export HOME=/home/jdoe
-   export PYLIB=$HOME/.local_python
+   export PYLOC=$HOME/.morays_venv
+   export PYHOST=$HOME/to_host/host_venv
    export ARCH="$(uname -m)-linux-gnu"
+   export PYTHONPATH=${PYLOC}/lib/python3.11/site-packages:$PYTHONPATH
    mkdir -p $HOME
 
    # Dev essential, MPI, NETCDF, Python
@@ -31,14 +32,15 @@ From: debian:bookworm-slim
 
    # Python environment
    # ------------------
-   python3 -m venv $PYLIB
-   . .$PYLIB/bin/activate
-   pip install matplotlib numpy==1.24.4 xarray cmocean einops mpi4py==3.1.5 tflite-runtime
+   python3 -m venv $PYLOC
+   . .$PYLOC/bin/activate
+   pip install matplotlib numpy==1.24.4 xarray cmocean einops mpi4py tflite-runtime
    pip install scipy==1.12.0 tqdm==4.66.1 gsw==3.6.19
    pip install torch==2.2.0 --index-url https://download.pytorch.org/whl/cpu
+   pip install Cython cloudpickle
 
-   # Install eophis
-   # --------------
+   # Clone eophis - (for OASIS)
+   # --------------------------
    git clone --branch v1.0.1 https://github.com/meom-group/eophis $HOME/eophis
    cd $HOME/eophis/
    pip install .
@@ -89,7 +91,7 @@ From: debian:bookworm-slim
 
    # Install XIOS without OASIS
    # --------------------------
-   cp -r /XIOS $HOME/XIOS
+   git clone -b XIOS2 https://gitlab.in2p3.fr/ipsl/projets/xios-projects/xios.git $HOME/XIOS
    
    rm $HOME/XIOS/arch/arch-GCC_LINUX.env
    echo "export INC_DIR=/usr/lib/$ARCH/include" >> $HOME/XIOS/arch/arch-GCC_LINUX.env
@@ -116,31 +118,32 @@ From: debian:bookworm-slim
    echo 'OASIS_LIBDIR="-L${OASIS_ROOT}/BLD/lib"' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
    echo 'OASIS_LIB="-lpsmile.MPI1 -lscrip -lmct -lmpeu -loasis.cbind"' >> $HOME/XIOS/arch/arch-GCC_LINUX.path
 
+   sed -i 's/%CCOMPILER[[:space:]]\+mpicc/%CCOMPILER    mpicc -fPIC/' $HOME/XIOS/arch/arch-GCC_LINUX.fcm
+   sed -i 's/%FCOMPILER[[:space:]]\+mpif90/%FCOMPILER   mpif90 -fPIC/' $HOME/XIOS/arch/arch-GCC_LINUX.fcm
+
    cd $HOME/XIOS
-   ./make_xios --full --prod --arch GCC_LINUX
+   ./make_xios --full --prod --arch GCC_LINUX --job 3
 
    # Install XIOS with OASIS
    # -----------------------
    cp -r $HOME/XIOS $HOME/XIOS_OASIS
    cd $HOME/XIOS_OASIS
-   ./make_xios --full --prod --arch GCC_LINUX --use_oasis oasis3_mct
+   ./make_xios --full --prod --arch GCC_LINUX --use_oasis oasis3_mct --job 3
 
    # clean
    # -----
-   cd $HOME/XIOS && rm -rf arch cfg doc extern generic_extern generic_testcase inputs scripts tools xios_test_suite ppsrc obj flags done etc Makefile arch.* Licence* bld.* *.svn
+   cd $HOME/XIOS && rm -rf arch cfg doc extern generic_extern generic_testcase inputs scripts tools xios_test_suite ppsrc obj flags done etc Makefile arch.* Licence* bld.* .svn
    cd $HOME/XIOS_OASIS && rm -rf arch cfg doc extern generic_extern generic_testcase inputs scripts tools xios_test_suite ppsrc obj flags done etc Makefile arch.* Licence* bld.* *.svn
    cd $HOME && rm -r $HOME/hdf5* $HOME/netcdf*
-   cd $HOME/oasis3-mct && rm -rf doc examples pyoasis/examples pyoasis/docs
-   pip uninstall -y eophis
    rm -r $HOME/eophis
-   rm -rf $HOME/.cache
    apt-get clean
    rm -rf /var/lib/apt/lists/*
 
    # Build bashrc
    # ------------
    echo "# Python Env\n############" >> ~/.bashrc
-   echo "source $PYLIB/bin/activate" >> ~/.bashrc
+   echo "python3 -m venv $PYHOST" >> ~/.bashrc
+   echo "source $PYHOST/bin/activate" >> ~/.bashrc
    echo "source $HOME/oasis3-mct/BLD/python/init.sh" >> ~/.bashrc
    echo "\n# Easier Life\n#############" >> ~/.bashrc
    echo "alias ls='ls --color=auto'" >> ~/.bashrc

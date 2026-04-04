@@ -69,7 +69,7 @@ or:
     wget https://github.com/morays-community/morays-doc/releases/download/containers/morays_env_${ARCH}.sif
 
     # Run container: should print " >>>> Welcome in Morays environment ! <<<< "
-    apptainer run --writable-tmpfs --bind $(pwd):/home/jdoe/morays_tutorial morays_env_${ARCH}.sif
+    apptainer run --writable-tmpfs --bind $(pwd):/home/jdoe/to_host morays_env_${ARCH}.sif
 
         
         
@@ -107,8 +107,8 @@ We start by running standard C1D_PAPA32 without W25. In this case, air-sea fluxe
 .. code-block:: bash
 
     # Clone NEMO
-    mkdir -p ~/morays_tutorial
-    cd ~/morays_tutorial
+    mkdir -p ~/to_host
+    cd ~/to_host
     git clone --branch 4.2.1 https://forge.nemo-ocean.eu/nemo/nemo.git nemo_v4.2.1
 
 
@@ -117,7 +117,7 @@ Inputs, config material and arch file for C1D_PAPA32 are accessible in this repo
 .. code-block:: bash
 
     # Clone C1D_PAPA32
-    cd ~/morays_tutorial/nemo_v4.2.1/cfgs/
+    cd ~/to_host/nemo_v4.2.1/cfgs/
     git clone https://github.com/alexis-barge/C1D_PAPA32.git
 
 
@@ -126,7 +126,7 @@ Build config:
 .. code-block:: bash
 
     # Create C1D_PAPA32 test case
-    cd ~/morays_tutorial/nemo_v4.2.1
+    cd ~/to_host/nemo_v4.2.1
     echo "C1D_PAPA32 OCE" >> cfgs/work_cfgs.txt
     
     # Compile -- adapt arch file if you are not running Morays container
@@ -138,7 +138,7 @@ and run NEMO:
 
 .. code-block:: bash
 
-    cd ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32/EXP00
+    cd ~/to_host/nemo_v4.2.1/cfgs/C1D_PAPA32/EXP00
     ./nemo
     
 You should find netcdf files ``C1D_PAPA32_1d_20100615_20110614_grid_<T,U,V,W>.nc`` when done. Scripts to plot profiles against time are provided:
@@ -146,7 +146,7 @@ You should find netcdf files ``C1D_PAPA32_1d_20100615_20110614_grid_<T,U,V,W>.nc
 .. code-block:: bash
  
     # Get plotting scripts and references
-    cd ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32/EXP00
+    cd ~/to_host/nemo_v4.2.1/cfgs/C1D_PAPA32/EXP00
     ln -s ../PLOTS/* .
  
     # Plot, you might need to exit container (and lima VM) to visualize figures
@@ -168,12 +168,12 @@ We have an operating NEMO configuration. Let's focus now on the W25 model. As me
 .. code-block:: bash
 
     # Clone and install W25 model
-    cd ~/morays_tutorial/
+    cd ~/to_host/
     git clone https://github.com/TRACCS-COMPACT/AG2025-workshop-ocean-ml-coupling.git  W25
     cd W25/W25/W25ANN
     pip install -e .
 
-Edit ``~/morays_tutorial/W25/W25/models.py``, a function ``W25ann()`` taking numpy arrays for all required inputs is already defined. Complete ``W25ann()`` as follows to convert the arrays into torch tensors, and pass them in the ANN to predict mean and standard deviation for the air-sea fluxes:
+Edit ``~/to_host/W25/W25/models.py``, a function ``W25ann()`` taking numpy arrays for all required inputs is already defined. Complete ``W25ann()`` as follows to convert the arrays into torch tensors, and pass them in the ANN to predict mean and standard deviation for the air-sea fluxes:
 
 
 .. code-block:: python
@@ -216,7 +216,7 @@ Time has come to install Eophis:
 .. code-block :: bash
 
     # Clone and install Eophis_v1.1.0
-    cd ~/morays_tutorial
+    cd ~/to_host
     git clone --branch v1.1.0 https://github.com/meom-group/eophis eophis_v1.1.0
     cd eophis_v1.1.0
     pip install .
@@ -225,7 +225,7 @@ Time has come to install Eophis:
 Define the exchanges
 ~~~~~~~~~~~~~~~~~~~~
 
-An Eophis script is provided in the W25 repository (``~/morays_tutorial/W25/W25/main.py``). The script may execute ``preproduction()`` or ``production()``. The first function is used to generate coupling material. The second one contains instructions to perform the coupling itself. For both, we need to define what we want to exchange in ``ocean_info()``. According to the diagram in introduction:
+An Eophis script is provided in the W25 repository (``~/to_host/W25/W25/main.py``). The script may execute ``preproduction()`` or ``production()``. The first function is used to generate coupling material. The second one contains instructions to perform the coupling itself. For both, we need to define what we want to exchange in ``ocean_info()``. According to the diagram in introduction:
 
 Eophis needs to receive from NEMO:
     - surface fields ``ux``, ``uy``, ``tair``, ``toce``, ``q``, ``p`` at each time step, on grid ``(1,1,1)``
@@ -283,7 +283,7 @@ OASIS3-MCT material is generated with ``write_coupling_namelist()``, which requi
 
 .. code-block :: python
 
-    nemo_nml = eophis.FortranNamelist('~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32/EXPREF/namelist_cfg')
+    nemo_nml = eophis.FortranNamelist('~/to_host/nemo_v4.2.1/cfgs/C1D_PAPA32/EXPREF/namelist_cfg')
     
 Thus, get namelist parameters (step 3) with:
     
@@ -363,7 +363,7 @@ C1D_PAPA32.W25 models the same C1D_PAPA32 ocean circulation. Duplicate the case:
 .. code-block:: bash
 
     # Create C1D_PAPA32.W25 test case
-    cd ~/morays_tutorial/nemo_v4.2.1/cfgs
+    cd ~/to_host/nemo_v4.2.1/cfgs
     mkdir C1D_PAPA32.W25
     echo "C1D_PAPA32.W25 OCE" >> work_cfgs.txt
     
@@ -376,7 +376,7 @@ and update experiment name in NEMO namelist:
 
 .. code-block:: bash
 
-    cd ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/EXPREF
+    cd ~/to_host/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/EXPREF
     vi namelist_cfg
         # ...
         cn_exp      = "C1D_PAPA32.W25" !  experience name
@@ -387,7 +387,7 @@ This configuration must be compatible with an OASIS3-MCT build. OASIS3-MCT inter
 .. code-block:: bash
 
     # Create CPP key file
-    echo " bld::tool::fppkeys   key_xios key_linssh key_oasis3" >> ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/cpp_C1D_PAPA32.W25.fcm
+    echo " bld::tool::fppkeys   key_xios key_linssh key_oasis3" >> ~/to_host/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/cpp_C1D_PAPA32.W25.fcm
 
 
 OASIS3-MCT and XIOS (compiled with OASIS3-MCT) must be linked during NEMO compilation. Duplicate C1D_PAPA32 arch file and include them:
@@ -395,7 +395,7 @@ OASIS3-MCT and XIOS (compiled with OASIS3-MCT) must be linked during NEMO compil
 .. code-block :: bash
 
     # New arch file
-    cd ~/morays_tutorial/nemo_v4.2.1/arch
+    cd ~/to_host/nemo_v4.2.1/arch
     cp arch-C1D_PAPA32_GCC.fcm   arch-C1D_PAPA32_W25_GCC.fcm
 
     # Modify following lines: template is valid for Morays container
@@ -415,7 +415,7 @@ Finally configure XIOS to be aware of OASIS3-MCT environment:
 
 .. code-block:: bash
 
-    vi ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/EXPREF/iodef.xml
+    vi ~/to_host/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/EXPREF/iodef.xml
         # ...
         <variable id="using_oasis"               type="bool">true</variable>
 
@@ -426,14 +426,14 @@ Minimal NEMO sources modifications are required to set up a hybrid Python-NEMO e
 .. code-block :: bash
 
     # Get Morays patch
-    cd ~/morays_tutorial/
+    cd ~/to_host/
     git clone https://github.com/morays-community/Patches-NEMO.git
     
 We transfer Morays sources for NEMO_v4.2.1 OCE module to our case:
 
 .. code-block :: bash
 
-    cp ~/morays_tutorial/Patches-NEMO/NEMO_v4.2.1/OCE/*   ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/MY_SRC/
+    cp ~/to_host/Patches-NEMO/NEMO_v4.2.1/OCE/*   ~/to_host/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/MY_SRC/
 
 
 
@@ -444,7 +444,7 @@ Morays patch comes with pre-defined Python communication modules ``pyfld.f90`` a
 
 .. code-block :: bash
 
-    vi ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/MY_SRC/pyfld.F90
+    vi ~/to_host/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/MY_SRC/pyfld.F90
 
 
 .. code-block :: Fortran
@@ -462,8 +462,8 @@ Import communication modules in ``sbcblk.F90``, as it is the location of air-sea
 
 .. code-block :: bash
     
-    cp ~/morays_tutorial/nemo_v4.2.1/src/OCE/SBC/sbcblk.F90   ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/MY_SRC/
-    vi ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/MY_SRC/sbcblk.F90
+    cp ~/to_host/nemo_v4.2.1/src/OCE/SBC/sbcblk.F90   ~/to_host/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/MY_SRC/
+    vi ~/to_host/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/MY_SRC/sbcblk.F90
 
 .. code-block :: Fortran
 
@@ -506,7 +506,7 @@ Finally build C1D_PAPA32.W25:
 .. code-block :: bash
 
     # Compile
-    cd ~/morays_tutorial/nemo_v4.2.1/
+    cd ~/to_host/nemo_v4.2.1/
     ./makenemo -m "C1D_PAPA32_W25_GCC" -r C1D_PAPA32.W25 -j 3
     
 
@@ -519,13 +519,13 @@ Complete C1D_PAPA32.W25 config with Eophis and W25 Python scripts:
 .. code-block :: bash
 
     # Get Python material
-    cp ~/morays_tutorial/W25/W25/*.py   ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/EXP00
+    cp ~/to_host/W25/W25/*.py   ~/to_host/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/EXP00
 
 Re-execute Eophis preproduction in config and run NEMO-Eophis:
 
 .. code-block :: bash
 
-    cd ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/EXP00
+    cd ~/to_host/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/EXP00
     python3 ./main.py --exec preprod
     mpirun -np 1 ./nemo : -np 1 python3 ./main.py --exec prod
 
@@ -535,7 +535,7 @@ As for C1D_PAPA32, you should find some netcdf files. Use same scripts to plot r
 .. code-block:: bash
  
     # Get plotting scripts and references
-    cd ~/morays_tutorial/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/EXP00
+    cd ~/to_host/nemo_v4.2.1/cfgs/C1D_PAPA32.W25/EXP00
     ln -s ../../C1D_PAPA32/PLOTS/* .
  
     # Plot, you might need to exit container (and lima VM) to visualize figures
