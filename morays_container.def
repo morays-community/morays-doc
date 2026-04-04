@@ -28,7 +28,7 @@ From: debian:bookworm-slim
    apt -y update
    apt install -y build-essential git vim wget bash imagemagick liburi-perl \
                   openmpi-bin libopenmpi-dev libnetcdff-dev libnetcdf-dev \
-                  python3.11 python3-venv pip
+                  unzip python3.11 python3-venv pip
 
    # Python environment
    # ------------------
