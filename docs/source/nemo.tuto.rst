@@ -9,7 +9,7 @@ Tutorial: Create a Morays experiment for NEMO
 In this tutorial we will create a Morays experiment for NEMO from scratch. Objective is to deploy the ML model proposed by `Wu et al. 2025 <https://doi.org/10.48550/arXiv.2503.03990>`_ (W25) within the `C1D_PAPA <https://doi.org/10.5194/gmd-8-69-2015>`_ NEMO config.
 
 
-Prerequisites to the turorial:
+Prerequisites to the tutorial:
     - Operating NEMO environment with XIOS (see `NEMO doc <https://sites.nemo-ocean.io/user-guide/install.html>`_ for help)
     - Operating Python environment
     - Operating Morays environment (see `here <https://morays-doc.readthedocs.io/en/latest/nemo.getting_started.html#morays-environment>`_)

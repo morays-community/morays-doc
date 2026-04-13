@@ -8,7 +8,7 @@ Getting started
 In this tutorial, we will deploy a Morays experiment for NEMO that is stored in the Morays collection. Objective of the experiment is to couple the ML model proposed by `Guillaumin and Zanna, 2021 <https://doi.org/10.1029/2021MS002534>`_ (GZ21) with the `DINO <https://github.com/vopikamm/DINO>`_ config.
 
 
-Prerequisites to the turorial:
+Prerequisites to the tutorial:
     - Operating NEMO environment (see `NEMO doc <https://sites.nemo-ocean.io/user-guide/install.html>`_ for help)
     - Operating Python environment
 or:

@@ -17,44 +17,47 @@ NEMO experiments
 
 NEMO-C1D_PAPA32_Bulk
 ~~~~~~~~~~~~~~~~~~~~
-1D column Ocean Station PAPA NEMO test case coupled with air-sea fluxes bulk formulae: `NEMO-C1D_PAPA32_Bulk <https://github.com/morays-community/NEMO-C1D_PAPA32_Bulk>`_
+NEMO_4.2.1 1D column Ocean Station PAPA test case coupled with air-sea fluxes bulk formulae: `NEMO-C1D_PAPA32_Bulk <https://github.com/morays-community/NEMO-C1D_PAPA32_Bulk>`_
 
 
 NEMO-C1D_PAPA32_AirSeaFluxes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-1D column Ocean Station PAPA NEMO test case coupled with air-sea momentum and heat fluxes parameterizations: `NEMO-C1D_PAPA32_AirSeaFluxes <https://github.com/morays-community/NEMO-C1D_PAPA32_AirSeaFluxes>`_
+NEMO_4.2.1 1D column Ocean Station PAPA test case coupled with air-sea momentum and heat fluxes parameterizations: `NEMO-C1D_PAPA32_AirSeaFluxes <https://github.com/morays-community/NEMO-C1D_PAPA32_AirSeaFluxes>`_
 
 
 NEMO-C1D_PAPA32_TurbMix
 ~~~~~~~~~~~~~~~~~~~~~~~
-1D column Ocean Station PAPA NEMO test case coupled with turbulent mixing parameterizations: `NEMO-C1D_PAPA32_TurbMix <https://github.com/morays-community/NEMO-C1D_PAPA32_TurbMix>`_
+NEMO_4.2.1 1D column Ocean Station PAPA test case coupled with turbulent mixing parameterizations: `NEMO-C1D_PAPA32_TurbMix <https://github.com/morays-community/NEMO-C1D_PAPA32_TurbMix>`_
 
 
 NEMO-DINO_Subgrid_Momentum
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-Idealized NeverwOrld config coupled with different subgrid momentum forcing: `NEMO-DINO <https://github.com/morays-community/NEMO-DINO_Subgrid_Momentum>`_
+NEMO_4.2.1 Idealized NeverwOrld config coupled with different subgrid momentum forcing: `NEMO-DINO <https://github.com/morays-community/NEMO-DINO_Subgrid_Momentum>`_
 
 
 NEMO-ORCA2_MLE
 ~~~~~~~~~~~~~~
-2º global ocean circulation with analytical subgrid-density closures: `NEMO-ORCA2_MLE <https://github.com/morays-community/NEMO-ORCA2_MLE>`_
-
-**>> Uses NEMO5**
+NEMO_5.0.1 2º global ocean circulation with analytical subgrid-density closures: `NEMO-ORCA2_MLE <https://github.com/morays-community/NEMO-ORCA2_MLE>`_
 
 
 NEMO-ORCA1_AirSeaHeat
 ~~~~~~~~~~~~~~~~~~~~~
-1º global ocean circulation with ML-based correction of air-sea heat fluxes: `NEMO-ORCA1_AirSeaHeat <https://github.com/morays-community/NEMO-ORCA1_AirSeaHeat>`_
+NEMO4.0.7 1º global ocean circulation with ML-based correction of air-sea heat fluxes: `NEMO-ORCA1_AirSeaHeat <https://github.com/morays-community/NEMO-ORCA1_AirSeaHeat>`_
+
+
+NEMO-ORCA1_AirSeaFluxes
+~~~~~~~~~~~~~~~~~~~~~~~
+NEMO_5.0.1 1º global ocean circulation coupled with air-sea momentum and heat fluxes parameterizations: `NEMO-ORCA1_AirSeaFluxes <https://github.com/morays-community/NEMO-ORCA1_AirSeaFluxes>`_
 
 
 NEMO-eORCA025_Subgrid_Density
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-1/4º global ocean circulation with analytical subgrid-density closures: `NEMO-eORCA025_Subgrid_Density <https://github.com/morays-community/NEMO-eORCA025_Subgrid_Density>`_
+NEMO_4.2.1 1/4º global ocean circulation with analytical subgrid-density closures: `NEMO-eORCA025_Subgrid_Density <https://github.com/morays-community/NEMO-eORCA025_Subgrid_Density>`_
 
 
 NEMO-eORCA025_MLE
 ~~~~~~~~~~~~~~~~~
-1/4º global ocean circulation with analytical and ML-based submesoscales Mixed Layer Eddies closures: `NEMO-eORCA025_MLE <https://github.com/morays-community/NEMO-eORCA025_MLE>`_
+NEMO_4.2.1 1/4º global ocean circulation with analytical and ML-based submesoscales Mixed Layer Eddies closures: `NEMO-eORCA025_MLE <https://github.com/morays-community/NEMO-eORCA025_MLE>`_
 
 
 
