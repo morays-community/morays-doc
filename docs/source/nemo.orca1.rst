@@ -137,6 +137,23 @@ The configuration is compatible with the NEMO Python wrapper `Aronnax <https://g
     NEMO_BLD=~/to_host/nemo_v5.0.1/cfgs/ORCA1   pip install .
     
     
+.. warning ::
+
+    If you are not running the Morays container, XIOS must be compiled with ``-fPIC`` flag first (or equivalent depending on your compiler). For instance:
+    
+    .. code-block :: bash
+
+        cat XIOS/arch/arch-XIOS.fcm
+            %CCOMPILER      mpicc -fPIC
+            %FCOMPILER      mpif90 -fPIC
+ 
+    or if you are using XIOS3 or later:
+    
+    .. code-block :: bash
+    
+        ./make_xios --full --prod --arch <YOUR_MACHINE> --dynamic
+    
+    
 To simulate one year, run the following commands in a Python script or interpreter:
 
 .. code-block:: python
@@ -147,6 +164,7 @@ To simulate one year, run the following commands in a Python script or interpret
     solver.start()
     solver.advance(years=1)
     solver.finish(write_restart=True)
+ 
  
 .. note :: More informations about use of Aronnax can be found in its dedicted documentation.
 
