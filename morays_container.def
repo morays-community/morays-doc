@@ -41,7 +41,7 @@ From: debian:bookworm-slim
 
    # Clone eophis - (for OASIS)
    # --------------------------
-   git clone --branch v1.0.1 https://github.com/meom-group/eophis $HOME/eophis
+   git clone --branch v1.1.0 https://github.com/meom-group/eophis $HOME/eophis
    cd $HOME/eophis/
    pip install .
 
