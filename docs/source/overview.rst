@@ -7,7 +7,7 @@ Morays
 
 -------------------------------
 
-`OASIS3-MCT`_ is a parallelized Fortran coupling library that performs field exchanges between coupled executables. Eophis is a Python library that facilitates the creation and the configuration of an OASIS3-MCT environment in a Python script to couple with Fortran/C geoscientific codes. It can be deployed with any geoscientific model if it does possess an OASIS3-MCT interface.
+`OASIS3-MCT`_ is a parallelized coupling library that performs field exchanges between coupled Earth System Model components. Eophis is a Python library that facilitates the creation and the configuration of an OASIS3-MCT environment in a Python script to couple with Fortran ESM. It can be deployed with any ESM that does possess an OASIS3-MCT interface.
 
 In this context, a Morays experiment is an ocean simulation in which the physical model sends fields towards an external Python script deployed by Eophis. The results computed by the Python model are sent back to the ocean and retroactively used for the solution.
 
@@ -47,6 +47,8 @@ Every Morays experiments are documented in a self contained separate GitHub repo
     Advanced users can find advanced tools and informations in corresponding model sections:
         - `NEMO-Eophis <https://morays-doc.readthedocs.io/en/latest/nemo.html>`_
         - `CROCO-Eophis <https://morays-doc.readthedocs.io/en/latest/croco.html>`_
+    For a detailed description of the Eophis computational performance and comparisons with alternative approaches, see:
+        - `Barge et al. (2026) – Deploying machine learning components coupled to Earth System Models with OASIS3-MCT (v6) and Eophis (v1.1) <https://doi.org/10.5194/gmd-19-10345-2026>`_
 
     People who wish to contribute to the Morays collection with their own experiments are invited to follow:
         - `Contribution guidelines <https://morays-doc.readthedocs.io/en/latest/contribute.html>`_

@@ -9,4 +9,3 @@ Deploy a Python model within CROCO
     CROCO for Morays <croco.api>
     Tutorial: Create a CROCO experiment <croco.tuto>
     Advanced CROCO-Eophis coupling <croco.tools>
-    Performances <croco.perf>
