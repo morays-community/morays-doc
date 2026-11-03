@@ -25,11 +25,6 @@ NEMO-C1D_PAPA32_AirSeaFluxes
 NEMO_4.2.1 1D column Ocean Station PAPA test case coupled with air-sea momentum and heat fluxes parameterizations: `NEMO-C1D_PAPA32_AirSeaFluxes <https://github.com/morays-community/NEMO-C1D_PAPA32_AirSeaFluxes>`_
 
 
-NEMO-C1D_PAPA32_TurbMix
-~~~~~~~~~~~~~~~~~~~~~~~
-NEMO_4.2.1 1D column Ocean Station PAPA test case coupled with turbulent mixing parameterizations: `NEMO-C1D_PAPA32_TurbMix <https://github.com/morays-community/NEMO-C1D_PAPA32_TurbMix>`_
-
-
 NEMO-DINO_Subgrid_Momentum
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 NEMO_4.2.1 Idealized NeverwOrld config coupled with different subgrid momentum forcing: `NEMO-DINO <https://github.com/morays-community/NEMO-DINO_Subgrid_Momentum>`_
