@@ -28,7 +28,7 @@ From: debian:bookworm-slim
    apt -y update
    apt install -y build-essential git vim wget bash imagemagick liburi-perl \
                   openmpi-bin libopenmpi-dev libnetcdff-dev libnetcdf-dev \
-                  unzip python3.11 python3-venv pip
+                  unzip python3.11 python3-venv pip subversion
 
    # Python environment
    # ------------------
@@ -36,7 +36,7 @@ From: debian:bookworm-slim
    . .$PYLOC/bin/activate
    pip install matplotlib numpy==1.24.4 xarray cmocean einops mpi4py tflite-runtime
    pip install scipy==1.12.0 tqdm==4.66.1 gsw==3.6.19
-   pip install torch==2.2.0 --index-url https://download.pytorch.org/whl/cpu
+   pip install torch==2.2.0 --extra-index-url https://download.pytorch.org/whl/cpu
    pip install Cython cloudpickle
 
    # Clone eophis - (for OASIS)
